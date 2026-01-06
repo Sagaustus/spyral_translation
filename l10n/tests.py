@@ -1,3 +1,4 @@
-from django.test import TestCase
+"""Tests for l10n app.
 
-# Create your tests here.
+Test suite will be added in later tasks (C14).
+"""
