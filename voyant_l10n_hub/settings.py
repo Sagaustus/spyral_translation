@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -32,6 +33,18 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "0").lower() in {"1", "true", "yes", "on"
 
 _allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").strip()
 ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(",") if h.strip()]
+
+# Heroku sends requests with a Host like "<app>.herokuapp.com".
+# If you forget to set DJANGO_ALLOWED_HOSTS in Heroku config vars, Django will
+# return 400 Bad Request for every request when DEBUG=False.
+if os.environ.get("DYNO"):
+    heroku_app_name = os.environ.get("HEROKU_APP_NAME", "").strip()
+    if heroku_app_name:
+        heroku_host = f"{heroku_app_name}.herokuapp.com"
+        if heroku_host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(heroku_host)
+    elif ".herokuapp.com" not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(".herokuapp.com")
 
 
 # Application definition
@@ -80,12 +93,36 @@ WSGI_APPLICATION = "voyant_l10n_hub.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=60,
-    )
-}
+RUNNING_TESTS = (
+    os.environ.get("PYTEST_CURRENT_TEST") is not None
+    or "pytest" in sys.modules
+    or "pytest" in (sys.argv[0] if sys.argv else "")
+    or "test" in sys.argv
+)
+
+if RUNNING_TESTS:
+    test_database_url = os.environ.get("DJANGO_TEST_DATABASE_URL", "").strip()
+    if test_database_url:
+        DATABASES = {
+            "default": dj_database_url.parse(
+                test_database_url,
+                conn_max_age=0,
+            )
+        }
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": ":memory:",
+            }
+        }
+else:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+            conn_max_age=60,
+        )
+    }
 
 
 # Password validation
