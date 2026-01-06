@@ -1,0 +1,12 @@
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "I", "B"]
+ignore = []
+target-version = "py312"
+
+[tool.ruff.per-file-ignores]
+"**/migrations/*.py" = ["E501"]
