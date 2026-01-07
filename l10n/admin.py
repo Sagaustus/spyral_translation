@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import admin, messages
 from django.db import models
 from django.db.models import QuerySet
@@ -85,6 +87,25 @@ def _assigned_locale_ids(user) -> list[int]:
     return list(LocaleAssignment.objects.filter(user=user).values_list("locale_id", flat=True))
 
 
+class HasQAWarningsFilter(admin.SimpleListFilter):
+    title = "QA warnings"
+    parameter_name = "has_qa_warnings"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("yes", "Has warnings"),
+            ("no", "No warnings"),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == "yes":
+            return queryset.exclude(qa_flags=[]).exclude(qa_flags__isnull=True)
+        if value == "no":
+            return queryset.filter(models.Q(qa_flags=[]) | models.Q(qa_flags__isnull=True))
+        return queryset
+
+
 @admin.action(description="Mark as In Review")
 def mark_in_review(_modeladmin, _request, queryset):
     """Set status=IN_REVIEW for selected translations."""
@@ -161,12 +182,13 @@ class TranslationAdmin(admin.ModelAdmin):
         "location",
         "message_id",
         "short_source",
+        "has_qa_warnings",
         "status",
         "provenance",
         "has_machine_draft",
         "updated_at",
     )
-    list_filter = ("locale", "status", "provenance")
+    list_filter = (HasQAWarningsFilter, "locale", "status", "provenance")
     search_fields = (
         "string_unit__location",
         "string_unit__message_id",
@@ -185,6 +207,7 @@ class TranslationAdmin(admin.ModelAdmin):
         "display_source_text",
         "display_source_hash",
         "source_hash_at_last_update",
+        "qa_warnings",
         "created_at",
         "updated_at",
     )
@@ -212,6 +235,10 @@ class TranslationAdmin(admin.ModelAdmin):
         (
             "Translations",
             {"fields": ("machine_draft", "reviewer_text", "approved_text")},
+        ),
+        (
+            "QA Warnings",
+            {"fields": ("qa_warnings",)},
         ),
         (
             "Workflow",
@@ -315,6 +342,21 @@ class TranslationAdmin(admin.ModelAdmin):
     @admin.display(boolean=True, description="Has draft")
     def has_machine_draft(self, obj: Translation) -> bool:
         return bool((obj.machine_draft or "").strip())
+
+    @admin.display(boolean=True, description="QA")
+    def has_qa_warnings(self, obj: Translation) -> bool:
+        return bool(obj.qa_flags)
+
+    @admin.display(description="Warnings")
+    def qa_warnings(self, obj: Translation) -> str:
+        if not obj.qa_flags:
+            return ""
+
+        try:
+            return json.dumps(obj.qa_flags, indent=2, ensure_ascii=False, sort_keys=True)
+        except TypeError:
+            # Fallback for any unexpected non-JSON-serializable objects.
+            return str(obj.qa_flags)
 
     @admin.display(description="Location")
     def display_location(self, obj: Translation) -> str:

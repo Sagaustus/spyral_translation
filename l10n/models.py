@@ -82,6 +82,8 @@ class Translation(models.Model):
     reviewer_text = models.TextField(blank=True, null=True)
     machine_draft = models.TextField(blank=True, null=True)
 
+    qa_flags = models.JSONField(default=list, blank=True)
+
     status = models.CharField(
         max_length=32,
         choices=TranslationStatus.choices,
@@ -114,6 +116,43 @@ class Translation(models.Model):
 
     def __str__(self) -> str:
         return f"{self.locale.code} :: {self.string_unit.location} :: {self.string_unit.message_id}"
+
+    def refresh_qa_flags(self, candidate_text: str) -> None:
+        from .services.qa import compute_qa_flags
+
+        source = ""
+        if self.string_unit_id:
+            source = self.string_unit.source_text or ""
+
+        flags = compute_qa_flags(source=source, target=candidate_text or "")
+
+        # Only warn about empty translations when a user tries to approve.
+        if self.status != Translation.TranslationStatus.APPROVED:
+            flags = [flag for flag in flags if flag.get("code") != "empty_translation"]
+
+        self.qa_flags = flags
+
+    def save(self, *args, **kwargs):
+        approved = (self.approved_text or "").strip()
+        reviewer = (self.reviewer_text or "").strip()
+        machine = (self.machine_draft or "").strip()
+
+        if approved:
+            candidate = approved
+        elif reviewer:
+            candidate = reviewer
+        elif machine:
+            candidate = machine
+        else:
+            candidate = ""
+
+        self.refresh_qa_flags(candidate)
+
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            kwargs["update_fields"] = list(set(update_fields) | {"qa_flags"})
+
+        return super().save(*args, **kwargs)
 
 
 class LocaleAssignment(models.Model):
