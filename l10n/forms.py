@@ -140,8 +140,20 @@ class TranslationReviewForm(forms.ModelForm):
 
     status = forms.ChoiceField(
         choices=[
-            (Translation.TranslationStatus.IN_REVIEW, "Approve (in review)"),
-            (Translation.TranslationStatus.REJECTED, "Disapprove (rejected)"),
+            (Translation.TranslationStatus.IN_REVIEW, "Approve (send to approver)"),
+            (Translation.TranslationStatus.REJECTED, "Disapprove (send to translator)"),
             (Translation.TranslationStatus.FLAGGED, "Flag (needs attention)"),
         ]
     )
+
+
+class TranslationCorrectionForm(forms.ModelForm):
+    class Meta:
+        model = Translation
+        fields = ["translator_text"]
+
+
+class TranslationFinalizeForm(forms.ModelForm):
+    class Meta:
+        model = Translation
+        fields = ["approved_text"]

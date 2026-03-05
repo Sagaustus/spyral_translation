@@ -1,0 +1,206 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Run Translation Pipeline — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <div class="action-strip">
+      <h2 style="margin: 0;">AI Translation Pipeline</h2>
+      <a class="btn btn-small" href="{% url 'l10n_dashboard' %}">&#8592; Dashboard</a>
+    </div>
+    <p class="muted mb-0">
+      Generates machine drafts for untranslated strings in a target locale.
+      Each string is translated, back-translated to English, scored for semantic
+      similarity, and flagged automatically before reviewers see it.
+    </p>
+  </div>
+
+  {% if result.error %}
+    <div class="alert alert--error" role="alert">
+      <strong>Error:</strong> {{ result.error }}
+    </div>
+  {% endif %}
+
+  {% if result.output %}
+    <div class="card mt-0" style="margin-bottom: 20px;">
+      <div class="action-strip" style="margin-bottom: 12px;">
+        <h3 style="margin: 0;">Pipeline output</h3>
+        <div class="badge-group">
+          <span class="badge" data-status="machine_draft">{{ result.engine }}</span>
+          <span class="badge">{{ result.locale_code }}</span>
+          <span class="badge">limit {{ result.limit }}</span>
+        </div>
+      </div>
+      <pre style="white-space: pre-wrap; word-break: break-word;">{{ result.output }}</pre>
+      {% if result.errors %}
+        <details style="margin-top: 12px;">
+          <summary>Warnings / errors</summary>
+          <pre style="margin-top: 10px; color: var(--clr-warning);">{{ result.errors }}</pre>
+        </details>
+      {% endif %}
+      <div class="form-actions" style="margin-top: 14px;">
+        <a class="btn btn-primary" href="{% url 'l10n_review' %}">Go to review queue</a>
+        <a class="btn" href="{% url 'l10n_progress' %}">View progress</a>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="grid cols-2" style="align-items: start;">
+    <div>
+      <div class="section-label"><h3>Configure run</h3></div>
+      <div class="card mt-0">
+        <form method="post" id="pipeline-form">
+          {% csrf_token %}
+
+          <p>
+            <label for="id_locale_code">Target locale</label>
+            <select name="locale_code" id="id_locale_code" required>
+              <option value="">— select —</option>
+              {% for loc in locales %}
+                <option value="{{ loc.code }}"
+                  {% if result.locale_code == loc.code %}selected{% endif %}>
+                  {{ loc.name }} ({{ loc.code }})
+                </option>
+              {% endfor %}
+            </select>
+            <span class="helptext">
+              Only locales already in the database appear here.
+              Add new ones via Admin → Locales or the <code>seed_locales</code> command.
+            </span>
+          </p>
+
+          <p>
+            <label for="id_engine">Translation engine</label>
+            <select name="engine" id="id_engine">
+              <option value="nllb"{% if default_engine == "nllb" %} selected{% endif %}>
+                NLLB-200 (local, no API key)
+              </option>
+              <option value="openai"{% if default_engine == "openai" %} selected{% endif %}>
+                OpenAI (requires OPENAI_API_KEY)
+              </option>
+              <option value="ollama"{% if default_engine == "ollama" %} selected{% endif %}>
+                Ollama (local LLM server)
+              </option>
+            </select>
+            <span class="helptext">
+              NLLB-200 is the primary engine — downloads ~1.2 GB on first use.
+              Engine is set in settings via <code>TRANSLATION_ENGINE</code>.
+            </span>
+          </p>
+
+          <p>
+            <label for="id_limit">Strings per run</label>
+            <input
+              type="number"
+              name="limit"
+              id="id_limit"
+              min="1"
+              max="500"
+              value="{{ default_limit }}"
+            />
+            <span class="helptext">
+              Safety cap: how many strings to translate in this web request.
+              For large batches use the management command instead:
+              <code>python manage.py run_pipeline --locale yo --limit 500</code>
+            </span>
+          </p>
+
+          <p>
+            <label>
+              <input type="checkbox" name="force" value="1"
+                {% if result.force %}checked{% endif %}
+              />
+              Force re-translate (overwrite existing drafts)
+            </label>
+          </p>
+
+          <p>
+            <label>
+              <input type="checkbox" name="no_score" value="1"
+                {% if result.no_score %}checked{% endif %}
+              />
+              Skip similarity scoring (faster; no back-translation)
+            </label>
+          </p>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit" id="run-btn">
+              &#9654; Run pipeline
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label"><h3>What happens</h3></div>
+
+      <div class="pipeline-steps" style="padding-left: 40px;">
+        <div class="pipeline-step">
+          <div class="pipeline-step__num">1</div>
+          <div class="pipeline-step__title">Protect placeholders</div>
+          <p class="pipeline-step__desc">
+            ICU tokens (<code>{0}</code>, <code>%(name)s</code>), HTML tags, and entities
+            are replaced with numbered sentinels before translation so the engine cannot corrupt them.
+          </p>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__num">2</div>
+          <div class="pipeline-step__title">Translate → machine draft</div>
+          <p class="pipeline-step__desc">
+            The selected engine produces a target-language draft.
+            Sentinels are swapped back after translation.
+          </p>
+          <div class="pipeline-step__engines">
+            <span class="pipeline-step__engine-tag">NLLB-200</span>
+            <span class="pipeline-step__engine-tag">OpenAI</span>
+            <span class="pipeline-step__engine-tag">Ollama</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__num">3</div>
+          <div class="pipeline-step__title">Back-translate → English</div>
+          <p class="pipeline-step__desc">
+            The draft is translated back to English using NLLB-200 (always local)
+            to produce a comparable surface for scoring.
+          </p>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__num">4</div>
+          <div class="pipeline-step__title">XLM-R similarity score</div>
+          <p class="pipeline-step__desc">
+            Cosine similarity between the original English source and the back-translated English.
+            Score &lt; 0.75 → <span class="badge badge-qa">low_similarity</span> QA flag.
+          </p>
+          <div class="pipeline-step__engines">
+            <span class="pipeline-step__engine-tag">XLM-R</span>
+            <span class="pipeline-step__engine-tag">sentence-transformers</span>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step__num">5</div>
+          <div class="pipeline-step__title">QA checks &amp; save</div>
+          <p class="pipeline-step__desc">
+            Placeholder integrity, HTML tag counts, empty-translation checks.
+            Status is set to <span class="badge" data-status="machine_draft">machine_draft</span>
+            (or <span class="badge" data-status="flagged">flagged</span> if QA issues found).
+            Reviewers then see these strings in the review queue.
+          </p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <h4>Need to run large batches?</h4>
+        <p class="muted text-sm mb-0">
+          For production-scale runs, use the management command directly — it supports
+          progress logging, chunking, and does not time out:
+        </p>
+        <pre style="margin-top: 10px; font-size: 0.82rem;">python manage.py run_pipeline \
+  --locale yo \
+  --engine nllb \
+  --limit 200 \
+  --verbose</pre>
+      </div>
+    </div>
+  </div>
+{% endblock %}

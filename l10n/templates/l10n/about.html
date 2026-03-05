@@ -3,48 +3,172 @@
 {% block title %}About the Project — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>About the Project</h2>
-
-  <div class="card">
-    <p>
-      This project studies how well current AI translation and NLP approaches handle African languages when localizing
-      real software interfaces (Voyant Tools), and how human validation can preserve meaning and nuance.
+  <div class="page-heading">
+    <h2>About the Project</h2>
+    <p class="muted mb-0">
+      An AI-driven, fully reproducible methodology for translating the Voyant Tools interface
+      into African languages — starting with Yoruba.
     </p>
   </div>
 
-  <h3>The problem</h3>
-  <ul>
-    <li>Monolingual records hide African terms</li>
-    <li>Eurocentric metadata flattens nuance</li>
-    <li>Epistemological representation and understanding of Textual Analysis Concepts</li>
-  </ul>
+  <div class="hero-banner hero-banner--sm">
+    <h2 class="hero-banner__title--sm">Language justice in digital humanities</h2>
+    <p class="hero-sub">
+      While Voyant Tools supports Arabic, French, German, Japanese, Spanish and many more, African languages
+      have remained excluded — not for lack of scholarly need, but for lack of scalable, reproducible localisation
+      frameworks. This project changes that.
+    </p>
+    <div class="hero-cta-row">
+      <a class="btn btn-primary" href="{% url 'l10n_workflow' %}">See the pipeline</a>
+      <a class="btn btn-ghost" href="{% url 'l10n_progress' %}">View progress</a>
+    </div>
+  </div>
 
-  <h3>The solution</h3>
-  <ul>
-    <li>Parallel metadata across African languages</li>
-    <li>Human-in-the-loop validation &amp; provenance</li>
-    <li>Open datasets + pluggable models (Ollama/OpenAI)</li>
-  </ul>
+  <div class="section-label"><h3>The problem</h3></div>
 
-  <h3>Future work</h3>
-  <ul>
-    <li>Expand language coverage and domain glossaries</li>
-    <li>☐ Add semantic similarity checks (embeddings)</li>
-    <li>☐ Deeper ontology links without flattening nuance</li>
-  </ul>
+  <div class="grid cols-3 mt-0">
+    <div class="card mt-0">
+      <div class="feature-icon" aria-hidden="true">&#128683;</div>
+      <h4>Limited NLP resources</h4>
+      <p class="muted mb-0">
+        African languages lack the parallel corpora, pre-trained models, and evaluation benchmarks
+        that European and Asian languages enjoy.
+      </p>
+    </div>
+    <div class="card mt-0">
+      <div class="feature-icon" aria-hidden="true">&#127759;</div>
+      <h4>No localisation framework</h4>
+      <p class="muted mb-0">
+        Community-based efforts are not scalable. There was no transparent, open, replicable workflow
+        for DH software localisation into African languages.
+      </p>
+    </div>
+    <div class="card mt-0">
+      <div class="feature-icon" aria-hidden="true">&#9878;&#65039;</div>
+      <h4>Exclusion from DH tools</h4>
+      <p class="muted mb-0">
+        Voyant Tools — widely used for text analysis in DH — had no African language interface,
+        excluding millions of speakers from a major research tool.
+      </p>
+    </div>
+  </div>
 
-  <h3>Workflow (high level)</h3>
-  <ul>
-    <li><strong>Source strings</strong> are imported from Voyant’s CSV into a database.</li>
-    <li><strong>AI drafts</strong> are generated (e.g., NLLB-200; optionally LLMs) while protecting placeholders and HTML tags.</li>
-    <li><strong>Verification</strong> uses back-translation and semantic similarity scoring (XLM-R-based) to detect divergences.</li>
-    <li><strong>QA checks</strong> detect placeholder/tag mismatches and other formatting risks.</li>
-    <li><strong>Human review</strong> approves or rejects translations (human-in-the-loop).</li>
-  </ul>
+  <div class="section-label"><h3>Our approach</h3></div>
 
-  <h3>Why this matters</h3>
-  <p>
-    Even when full NLP analysis for a language is not yet available inside Voyant, multilingual interface “skins” are a meaningful
-    step toward accessibility and language justice in digital scholarship.
-  </p>
+  <div class="grid cols-2">
+    <div class="card">
+      <h4>AI-assisted, human-validated</h4>
+      <p class="muted">
+        We combine multiple translation engines — NLLB-200, OpenAI, and optionally Ollama — to generate
+        machine drafts, then apply back-translation and XLM-R semantic similarity scoring to verify quality
+        before a human reviewer approves each string.
+      </p>
+      <p class="mb-0 muted text-sm">
+        The result: a provenance-aware, auditable localisation — every string carries its source engine,
+        similarity score, and review history.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Reproducible by design</h4>
+      <p class="muted">
+        Every step is implemented in open Python — no proprietary tooling, no locked-in services.
+        The workflow, scripts, and datasets are shared publicly so any DH scholar can replicate or
+        extend it for Amharic, Swahili, isiZulu, or any other African language.
+      </p>
+      <p class="mb-0 muted text-sm">
+        Implemented in a Jupyter Notebook environment, requiring only an internet connection
+        and (optionally) a GPU for the NLLB model.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-label"><h3>AI models used</h3></div>
+
+  <div class="model-cards">
+    <div class="model-card">
+      <span class="model-card__tag model-card__tag--mt">Machine Translation</span>
+      <h4 class="model-card__title">NLLB-200</h4>
+      <p class="muted mb-0 text-sm">
+        Meta AI’s 200-language model. Primary engine for Yoruba drafts.
+        Runs locally; no API key required.
+      </p>
+    </div>
+    <div class="model-card">
+      <span class="model-card__tag model-card__tag--llm">LLM (optional)</span>
+      <h4 class="model-card__title">OpenAI / Ollama</h4>
+      <p class="muted mb-0 text-sm">
+        Used for alternative drafts, cross-model comparison, and terminology suggestions.
+        Pluggable — swap in any model via environment variable.
+      </p>
+    </div>
+    <div class="model-card">
+      <span class="model-card__tag model-card__tag--embed">Semantic Scoring</span>
+      <h4 class="model-card__title">XLM-R</h4>
+      <p class="muted mb-0 text-sm">
+        Cross-lingual sentence embeddings (via sentence-transformers) for back-translation
+        similarity scoring. Detects semantic drift automatically.
+      </p>
+    </div>
+    <div class="model-card">
+      <span class="model-card__tag model-card__tag--bench">Benchmark</span>
+      <h4 class="model-card__title">AfroLingu-MT</h4>
+      <p class="muted mb-0 text-sm">
+        UBC-NLP’s African language MT benchmark dataset, used for evaluating translation
+        quality on African language pairs beyond Voyant strings.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-label"><h3>Why this matters</h3></div>
+
+  <div class="card mt-0">
+    <p>
+      Even when full NLP analysis for a language is not yet available inside Voyant, multilingual interface
+      “skins” are a meaningful first step. A scholar working in Yoruba should be able to navigate the
+      tool in their own language — this reduces the cognitive overhead of digital humanities work and
+      sends a clear signal that these languages belong in scholarly infrastructure.
+    </p>
+    <p class="mb-0">
+      This project is a <strong>template</strong>. The same pipeline can be pointed at any Voyant-supported
+      export CSV and any target language supported by NLLB-200 or the chosen LLM.
+      We invite scholars, students, and community members to extend it to <em>Amharic</em>, <em>Swahili</em>,
+      <em>isiZulu</em>, and beyond.
+    </p>
+  </div>
+
+  <div class="section-label"><h3>Presentation overview</h3></div>
+
+  <div class="card mt-0">
+    <ol class="mb-0">
+      <li>Introduce the general problem of translating digital humanities resources.</li>
+      <li>Describe how Voyant handles different language interfaces and the challenge of adding new ones.</li>
+      <li>Walk through the AI-assisted workflow with its human-in-the-loop validation phase.</li>
+      <li>Discuss specialised language models for African languages (NLLB-200, AfroLingu-MT).</li>
+      <li>Call for more translated DH tools and low-resource language utilities.</li>
+    </ol>
+  </div>
+
+  <div class="section-label"><h3>Future directions</h3></div>
+
+  <div class="grid cols-3">
+    <div class="card">
+      <h4>More languages</h4>
+      <p class="muted mb-0 text-sm">
+        Expand beyond Yoruba to Hausa, Igbo, Swahili, Amharic, isiZulu — using the same pipeline.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Domain glossaries</h4>
+      <p class="muted mb-0 text-sm">
+        Build controlled terminology lists per language to enforce consistency across related UI strings.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Deeper NLP support</h4>
+      <p class="muted mb-0 text-sm">
+        Work towards enabling Voyant’s <em>analysis</em> capabilities — not just the interface — for
+        African language texts.
+      </p>
+    </div>
+  </div>
 {% endblock %}

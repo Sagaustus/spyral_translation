@@ -47,6 +47,39 @@ if os.environ.get("DYNO"):
         ALLOWED_HOSTS.append(".herokuapp.com")
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    return os.environ.get(name, "1" if default else "0").lower() in {"1", "true", "yes", "on"}
+
+
+# If you're behind a proxy that terminates TLS (e.g., Heroku), Django needs this
+# to correctly detect HTTPS.
+if os.environ.get("DYNO") or _env_bool("DJANGO_BEHIND_PROXY", False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
+_csrf_trusted = [
+    o.strip()
+    for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if o.strip()
+]
+
+# On Heroku (and many platforms), CSRF Origin checking can fail unless the
+# deployed origin is explicitly trusted.
+if os.environ.get("DYNO"):
+    heroku_app_name = os.environ.get("HEROKU_APP_NAME", "").strip()
+    if heroku_app_name:
+        _csrf_trusted.append(f"https://{heroku_app_name}.herokuapp.com")
+    _csrf_trusted.append("https://*.herokuapp.com")
+
+CSRF_TRUSTED_ORIGINS = sorted(set(_csrf_trusted))
+
+# Cookie security: default to secure cookies on Heroku, but keep local HTTP
+# workable unless you opt in.
+_secure_cookies_default = bool(os.environ.get("DYNO"))
+CSRF_COOKIE_SECURE = _env_bool("DJANGO_CSRF_COOKIE_SECURE", _secure_cookies_default)
+SESSION_COOKIE_SECURE = _env_bool("DJANGO_SESSION_COOKIE_SECURE", _secure_cookies_default)
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -186,3 +219,30 @@ else:
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ── Translation Pipeline ───────────────────────────────────────────────────
+# Engine choices: "nllb" (local, no key), "openai", "ollama"
+TRANSLATION_ENGINE = os.environ.get("TRANSLATION_ENGINE", "nllb")
+
+# NLLB-200: local model downloaded to HuggingFace cache on first use.
+# Swap to "facebook/nllb-200-1.3B" for higher quality (requires more RAM/VRAM).
+NLLB_MODEL_NAME = os.environ.get("NLLB_MODEL_NAME", "facebook/nllb-200-distilled-600M")
+
+# OpenAI (optional) — set OPENAI_API_KEY in .env to enable
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
+# Ollama (optional local LLM) — run `ollama serve` and set model name
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3")
+
+# XLM-R semantic similarity scoring
+# Model downloaded to HuggingFace cache on first use (~420 MB).
+SIMILARITY_MODEL = os.environ.get(
+    "SIMILARITY_MODEL", "paraphrase-multilingual-mpnet-base-v2"
+)
+# Strings with back-translation similarity below this threshold get a QA flag.
+SIMILARITY_THRESHOLD = float(os.environ.get("SIMILARITY_THRESHOLD", "0.75"))
+
+# Maximum strings processed per web-triggered pipeline run (safety cap).
+PIPELINE_WEB_LIMIT = int(os.environ.get("PIPELINE_WEB_LIMIT", "30"))

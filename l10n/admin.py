@@ -80,6 +80,7 @@ def approve_applicants(_modeladmin, request, queryset):
         return
 
     reviewer_group, _ = Group.objects.get_or_create(name="L10N_REVIEWER")
+    translator_group, _ = Group.objects.get_or_create(name="L10N_TRANSLATOR")
 
     updated = 0
     for app in queryset.select_related("user", "desired_locale"):
@@ -87,6 +88,7 @@ def approve_applicants(_modeladmin, request, queryset):
         app.save(update_fields=["status", "updated_at"])
 
         reviewer_group.user_set.add(app.user)
+        translator_group.user_set.add(app.user)
         LocaleAssignment.objects.get_or_create(user=app.user, locale=app.desired_locale)
         updated += 1
 
@@ -226,10 +228,12 @@ class TranslationAdmin(admin.ModelAdmin):
         "has_qa_warnings",
         "status",
         "provenance",
+        "engine",
+        "similarity_score",
         "has_machine_draft",
         "updated_at",
     )
-    list_filter = (HasQAWarningsFilter, "locale", "status", "provenance")
+    list_filter = (HasQAWarningsFilter, "locale", "status", "provenance", "engine")
     search_fields = (
         "string_unit__location",
         "string_unit__message_id",
@@ -249,6 +253,9 @@ class TranslationAdmin(admin.ModelAdmin):
         "display_source_hash",
         "source_hash_at_last_update",
         "qa_warnings",
+        "similarity_score",
+        "back_translation",
+        "engine",
         "created_at",
         "updated_at",
     )
@@ -276,6 +283,18 @@ class TranslationAdmin(admin.ModelAdmin):
         (
             "Translations",
             {"fields": ("machine_draft", "reviewer_text", "approved_text")},
+        ),
+        (
+            "Pipeline provenance",
+            {
+                "fields": ("engine", "back_translation", "similarity_score"),
+                "classes": ("collapse",),
+                "description": (
+                    "Populated by the run_pipeline management command. "
+                    "back_translation is the AI draft translated back to English; "
+                    "similarity_score is XLM-R cosine similarity (0–1)."
+                ),
+            },
         ),
         (
             "QA Warnings",

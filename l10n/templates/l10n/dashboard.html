@@ -5,43 +5,98 @@
 {% block content %}
   <div class="page-heading">
     <h2>Staff Dashboard</h2>
-    <p class="muted mb-0">Overview of the Yoruba (yo) localization pipeline.</p>
+    <p class="muted mb-0">
+      Per-language pipeline overview across {{ locale_count }} active locale{{ locale_count|pluralize }}.
+      Total string pool: <strong>{{ total_strings }}</strong> strings.
+    </p>
   </div>
 
-  <div class="stat-row">
-    <div class="stat-card">
-      <span class="stat-card__number">{{ total_string_units }}</span>
-      <span class="stat-card__label">Total strings</span>
+  <div class="section-label"><h3>Pipeline</h3></div>
+
+  <div class="card mt-0" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h4 style="margin-bottom: 4px;">Run AI Translation Pipeline</h4>
+      <p class="muted text-sm mb-0">
+        Generate machine drafts for untranslated strings via NLLB-200, OpenAI, or Ollama.
+        Each draft is back-translated, scored, and QA-checked automatically.
+      </p>
     </div>
-    <div class="stat-card stat-card--success">
-      <span class="stat-card__number">{{ approved_count }}</span>
-      <span class="stat-card__label">Approved</span>
-    </div>
-    <div class="stat-card stat-card--warning">
-      <span class="stat-card__number">{{ missing_count }}</span>
-      <span class="stat-card__label">Missing approved</span>
-    </div>
-    <div class="stat-card stat-card--danger">
-      <span class="stat-card__number">{{ qa_warning_count }}</span>
-      <span class="stat-card__label">QA warnings</span>
-    </div>
-    <div class="stat-card">
-      <span class="stat-card__number">{{ stale_count }}</span>
-      <span class="stat-card__label">Stale</span>
-    </div>
+    <a class="btn btn-primary" href="{% url 'l10n_trigger_pipeline' %}">&#9654; Run pipeline</a>
   </div>
 
-  <div class="section-label"><h3>Actions</h3></div>
+  <div class="section-label"><h3>Quick actions</h3></div>
 
   <div class="card mt-0">
     <ul class="mb-0">
       <li><a href="{% url 'l10n_import_voyant_csv' %}">Import Voyant CSV</a></li>
-      <li><a href="{% url 'l10n_export_yo_csv' %}">Export Yoruba CSV</a></li>
+      {% for s in locale_stats %}
+        <li>
+          <a href="{% url 'l10n_export_locale_csv' s.locale.code %}">
+            Export {{ s.locale.name }} ({{ s.locale.code }}) CSV
+          </a>
+        </li>
+      {% endfor %}
       <li>
-        <a href="{% url 'admin:l10n_translation_changelist' %}?locale__code__exact=yo">
-          Review Yoruba translations in Admin
+        <a href="{% url 'admin:l10n_translation_changelist' %}">
+          Manage all translations in Admin
         </a>
       </li>
     </ul>
   </div>
+
+  <div class="section-label"><h3>Per-locale status</h3></div>
+
+  {% if locale_stats %}
+    <div class="dashboard-locale-grid">
+      {% for s in locale_stats %}
+        <div class="locale-card" data-reveal>
+          <div class="locale-card-header">
+            <div class="locale-card-meta">
+              <div class="locale-name">{{ s.locale.name }}</div>
+              <span class="locale-code">{{ s.locale.code }}</span>
+            </div>
+            <div class="locale-pct">{{ s.pct }}%</div>
+          </div>
+
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" data-width="{{ s.pct }}"></div>
+          </div>
+
+          <div class="stat-row" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-bottom: 12px;">
+            <div class="stat-card" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.approved }}</span>
+              <span class="stat-card__label">Approved</span>
+            </div>
+            <div class="stat-card stat-card--warning" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.missing }}</span>
+              <span class="stat-card__label">Missing</span>
+            </div>
+            <div class="stat-card stat-card--danger" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.qa_warnings }}</span>
+              <span class="stat-card__label">QA flags</span>
+            </div>
+            <div class="stat-card" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.stale }}</span>
+              <span class="stat-card__label">Stale</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a class="btn btn-small" href="{% url 'admin:l10n_translation_changelist' %}?locale__code__exact={{ s.locale.code }}">
+              Review in Admin
+            </a>
+            <a class="btn btn-small" href="{% url 'l10n_export_locale_csv' s.locale.code %}">
+              Export CSV
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card">
+      <p class="muted mb-0">
+        No enabled locales found. Add locales via Admin and import a Voyant CSV to get started.
+      </p>
+    </div>
+  {% endif %}
 {% endblock %}

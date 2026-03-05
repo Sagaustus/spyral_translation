@@ -3,31 +3,80 @@
 {% block title %}My Application — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>My Application</h2>
+  <div class="page-heading">
+    <h2>My Application</h2>
+    <p class="muted mb-0">
+      Your translator application status and next steps.
+    </p>
+  </div>
 
   {% if application %}
-    <div class="card">
-      <p><strong>Status:</strong> {{ application.status }}</p>
-      <p><strong>Requested language:</strong> {{ application.desired_locale.name }} ({{ application.desired_locale.code }})</p>
-      <p class="muted" style="margin-bottom: 0;">
-        If your status is Pending, you can explore the site but cannot review translations until approved.
-      </p>
+    <div class="card mt-0">
+      <div class="status-hero">
+        {% if application.status == "APPROVED" %}
+          <span class="status-icon">&#9989;</span>
+          <h2>Application Approved</h2>
+          <p class="muted">
+            Welcome to the team! You can now review AI-generated translations for your assigned language.
+          </p>
+        {% elif application.status == "REJECTED" %}
+          <span class="status-icon">&#10060;</span>
+          <h2>Application Not Accepted</h2>
+          <p class="muted">
+            Thank you for applying. Unfortunately your application was not approved at this time.
+            You are welcome to re-apply in the future.
+          </p>
+        {% else %}
+          <span class="status-icon">&#9203;</span>
+          <h2>Application Pending</h2>
+          <p class="muted">
+            Your application is under review. We will notify you once a decision has been made.
+            In the meantime, feel free to explore the site.
+          </p>
+        {% endif %}
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-top: 8px; border-top: 1px solid var(--clr-border);">
+        <div class="locale-stat" style="flex: 1; min-width: 180px;">
+          <strong>Status:</strong>
+          <span class="badge" data-status="{{ application.status|lower }}">{{ application.get_status_display }}</span>
+        </div>
+        <div class="locale-stat" style="flex: 1; min-width: 180px;">
+          <strong>Language:</strong>
+          {{ application.desired_locale.name }}
+          <span class="locale-code">{{ application.desired_locale.code }}</span>
+        </div>
+      </div>
     </div>
 
     {% if application.status == "APPROVED" %}
       <div class="card">
-        <p style="margin: 0;">
-          You have been approved. You can now review AI drafts for your assigned language.
+        <h3 style="margin-top: 0;">You are ready to review</h3>
+        <p class="muted text-sm">
+          Open the review queue to see AI-generated drafts awaiting human validation.
+          Your approval is what turns machine translations into export-ready Yoruba strings.
         </p>
-        <p style="margin: 10px 0 0 0;">
-          <a class="btn" href="{% url 'l10n_review' %}">Open Review Queue</a>
-        </p>
+        <div class="form-actions" style="margin-top: 14px;">
+          <a class="btn btn-primary" href="{% url 'l10n_review' %}">Open Review Queue</a>
+          <a class="btn" href="{% url 'l10n_progress' %}">View progress</a>
+        </div>
       </div>
     {% endif %}
+
   {% else %}
-    <div class="card">
-      <p>You do not have an application on file.</p>
-      <p><a class="btn" href="{% url 'l10n_apply' %}">Apply to be a translator</a></p>
+    <div class="card mt-0">
+      <div class="status-hero">
+        <span class="status-icon">&#128196;</span>
+        <h2>No Application on File</h2>
+        <p class="muted">
+          You have not submitted a translator application yet. Apply to join the
+          human-in-the-loop review team.
+        </p>
+      </div>
+      <div class="form-actions" style="justify-content: center;">
+        <a class="btn btn-primary" href="{% url 'l10n_apply' %}">Apply to be a reviewer</a>
+        <a class="btn" href="{% url 'l10n_call_translators' %}">Learn what's involved</a>
+      </div>
     </div>
   {% endif %}
 {% endblock %}

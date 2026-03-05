@@ -1,0 +1,62 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}AI Progress — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <h2>AI Progress</h2>
+    <p class="muted mb-0">Draft coverage by locale (machine drafts generated).</p>
+  </div>
+
+  {% if locale_stats %}
+    <div class="dashboard-locale-grid">
+      {% for row in locale_stats %}
+        <div class="locale-card" data-reveal>
+          <div class="locale-card-header">
+            <div class="locale-card-meta">
+              <div class="locale-name">{{ row.locale.name }}</div>
+              <span class="locale-code">{{ row.locale.code }}</span>
+            </div>
+            <div class="locale-pct">{{ row.pct }}%</div>
+          </div>
+
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" data-width="{{ row.pct }}"></div>
+          </div>
+
+          <div class="stat-row" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-bottom: 12px;">
+            <div class="stat-card" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ row.drafted }}</span>
+              <span class="stat-card__label">Drafted</span>
+            </div>
+            <div class="stat-card" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ row.approved }}</span>
+              <span class="stat-card__label">Approved</span>
+            </div>
+            <div class="stat-card" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ row.in_review }}</span>
+              <span class="stat-card__label">In review</span>
+            </div>
+            <div class="stat-card stat-card--warning" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ row.rejected }}</span>
+              <span class="stat-card__label">Rejected</span>
+            </div>
+            <div class="stat-card stat-card--danger" style="padding: 12px 10px;">
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ row.flagged }}</span>
+              <span class="stat-card__label">Flagged</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a class="btn btn-small" href="{% url 'l10n_trigger_pipeline' %}">Run pipeline</a>
+            <a class="btn btn-small" href="{% url 'l10n_export_locale_csv' row.locale.code %}">Export CSV</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card mt-0">
+      <p class="muted mb-0">No enabled locales found.</p>
+    </div>
+  {% endif %}
+{% endblock %}

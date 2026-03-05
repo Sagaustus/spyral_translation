@@ -1,0 +1,240 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Translation Pipeline — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <h2>AI-Assisted Translation Pipeline</h2>
+    <p class="muted mb-0">
+      A fully reproducible, seven-step workflow turning raw Voyant UI strings into
+      human-validated Yoruba translations — with provenance tracked at every stage.
+    </p>
+  </div>
+
+  <div class="hero-banner hero-banner--sm" data-reveal>
+    <h2 class="hero-banner__title--sm">Every string has a story</h2>
+    <p class="hero-sub">
+      From machine draft to approved translation, each string carries its source engine,
+      back-translation, similarity score, and reviewer history — fully auditable and replicable.
+    </p>
+    <div class="hero-cta-row">
+      <a class="btn btn-primary" href="{% url 'l10n_progress' %}">View live progress</a>
+      <a class="btn btn-ghost" href="{% url 'l10n_about' %}">About the project</a>
+    </div>
+  </div>
+
+  <div class="section-label"><h3>The seven steps</h3></div>
+
+  <div class="grid cols-2" style="gap: 0; align-items: start;">
+    <div class="pipeline-steps" data-reveal>
+
+      <div class="pipeline-step">
+        <div class="pipeline-step__num">1</div>
+        <span class="pipeline-step__icon">&#128229;</span>
+        <div class="pipeline-step__title">Import Voyant CSV</div>
+        <p class="pipeline-step__desc">
+          A Voyant Tools administrator exports the UI string bundle as a CSV file.
+          Our Django management command ingests every row into the <code>StringUnit</code>
+          model, capturing the location, message ID, and English source text.
+        </p>
+        <div class="pipeline-step__engines">
+          <span class="pipeline-step__engine-tag">import_voyant_csv</span>
+          <span class="pipeline-step__engine-tag">StringUnit model</span>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-step__num">2</div>
+        <span class="pipeline-step__icon">&#128737;&#65039;</span>
+        <div class="pipeline-step__title">Protect Placeholders</div>
+        <p class="pipeline-step__desc">
+          UI strings often contain ICU message syntax (<code>{count}</code>),
+          HTML tags, or positional arguments. Before translation, a regex pass
+          swaps these tokens for numbered sentinels (<code>&#9632;1&#9632;</code>)
+          so the translation engine never mangles them.
+        </p>
+        <div class="pipeline-step__engines">
+          <span class="pipeline-step__engine-tag">placeholder_guard.py</span>
+          <span class="pipeline-step__engine-tag">ICU / HTML-safe</span>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-step__num">3</div>
+        <span class="pipeline-step__icon">&#129302;</span>
+        <div class="pipeline-step__title">Generate Machine Draft</div>
+        <p class="pipeline-step__desc">
+          One or more translation engines produce a candidate Yoruba rendering.
+          NLLB-200 runs locally (no API key). OpenAI and Ollama are optional
+          pluggable alternatives controlled via environment variables.
+          Multiple drafts can be stored side-by-side for cross-model comparison.
+        </p>
+        <div class="pipeline-step__engines">
+          <span class="pipeline-step__engine-tag">NLLB-200</span>
+          <span class="pipeline-step__engine-tag">OpenAI (optional)</span>
+          <span class="pipeline-step__engine-tag">Ollama (optional)</span>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-step__num">4</div>
+        <span class="pipeline-step__icon">&#128260;</span>
+        <div class="pipeline-step__title">Back-Translation</div>
+        <p class="pipeline-step__desc">
+          The Yoruba draft is translated back to English using NLLB-200.
+          This round-trip surface is later compared to the original English
+          source to detect semantic drift — strings that "lost their meaning"
+          in translation are flagged automatically.
+        </p>
+        <div class="pipeline-step__engines">
+          <span class="pipeline-step__engine-tag">NLLB-200 (yo→en)</span>
+          <span class="pipeline-step__engine-tag">back_translate()</span>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-step__num">5</div>
+        <span class="pipeline-step__icon">&#128202;</span>
+        <div class="pipeline-step__title">Semantic Similarity Scoring</div>
+        <p class="pipeline-step__desc">
+          XLM-R (via <code>sentence-transformers</code>) embeds both the original
+          English source and the back-translated text into cross-lingual vector space.
+          Cosine similarity between the two embeddings gives a score in [0, 1].
+          Strings below the threshold are marked as QA warnings.
+        </p>
+        <div class="pipeline-step__engines">
+          <span class="pipeline-step__engine-tag">XLM-R</span>
+          <span class="pipeline-step__engine-tag">sentence-transformers</span>
+          <span class="pipeline-step__engine-tag">cosine similarity</span>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-step__num">6</div>
+        <span class="pipeline-step__icon">&#9888;&#65039;</span>
+        <div class="pipeline-step__title">Automated QA Flags</div>
+        <p class="pipeline-step__desc">
+          A lightweight rule engine checks: placeholder integrity (sentinels
+          restored correctly), length ratio (translation suspiciously shorter
+          or longer), Unicode validity, and similarity score threshold.
+          Each failed check is stored as a structured flag on the
+          <code>Translation</code> record for reviewer visibility.
+        </p>
+        <div class="pipeline-step__engines">
+          <span class="pipeline-step__engine-tag">qa_check()</span>
+          <span class="pipeline-step__engine-tag">qa_flags JSON field</span>
+          <span class="pipeline-step__engine-tag">AfroLingu-MT eval</span>
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-step__num">7</div>
+        <span class="pipeline-step__icon">&#128101;</span>
+        <div class="pipeline-step__title">Human Review &amp; Approval</div>
+        <p class="pipeline-step__desc">
+          Approved volunteer reviewers (speakers of the target language) inspect
+          the AI draft alongside the source, back-translation, similarity score,
+          and QA flags. They can accept, edit, or reject the draft.
+          Only reviewer-approved strings are exported in the final Voyant CSV.
+        </p>
+        <div class="pipeline-step__engines">
+          <span class="pipeline-step__engine-tag">Review Queue UI</span>
+          <span class="pipeline-step__engine-tag">status: APPROVED</span>
+          <span class="pipeline-step__engine-tag">human-in-the-loop</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div data-reveal data-reveal-delay="2">
+      <div class="card" style="position: sticky; top: 100px;">
+        <h3 style="margin-top: 0;">Models at a glance</h3>
+
+        <div class="model-cards" style="grid-template-columns: 1fr;">
+          <div class="model-card">
+            <span class="model-card__tag model-card__tag--mt">Machine Translation</span>
+            <div class="model-card__title">NLLB-200</div>
+            <p class="muted mb-0 text-sm">
+              Meta AI's 200-language neural MT model. Primary engine for Yoruba drafts
+              and back-translation. Runs locally — no API key required.
+            </p>
+          </div>
+          <div class="model-card">
+            <span class="model-card__tag model-card__tag--llm">LLM (optional)</span>
+            <div class="model-card__title">OpenAI / Ollama</div>
+            <p class="muted mb-0 text-sm">
+              Used for alternative draft generation and terminology suggestions.
+              Swap in any model via environment variable.
+            </p>
+          </div>
+          <div class="model-card">
+            <span class="model-card__tag model-card__tag--embed">Semantic Scoring</span>
+            <div class="model-card__title">XLM-R</div>
+            <p class="muted mb-0 text-sm">
+              Cross-lingual sentence embeddings for back-translation similarity scoring.
+              Detects semantic drift automatically.
+            </p>
+          </div>
+          <div class="model-card">
+            <span class="model-card__tag model-card__tag--bench">Benchmark</span>
+            <div class="model-card__title">AfroLingu-MT</div>
+            <p class="muted mb-0 text-sm">
+              UBC-NLP's African language MT benchmark for evaluating quality on
+              African language pairs beyond Voyant strings.
+            </p>
+          </div>
+        </div>
+
+        <div class="section-label" style="margin-top: 28px;"><h3>Translation statuses</h3></div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div><span class="badge" data-status="machine_draft">machine_draft</span> — AI draft generated, not yet reviewed</div>
+          <div><span class="badge" data-status="in_review">in_review</span> — Reviewer is working on this string</div>
+          <div><span class="badge badge-qa">&#9888; QA flags</span> — Automated checks raised concerns</div>
+          <div><span class="badge" data-status="approved">approved</span> — Human-validated, export-ready</div>
+          <div><span class="badge" data-status="flagged">flagged</span> — Rejected or needs rework</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label"><h3>Reproducibility</h3></div>
+
+  <div class="grid cols-3">
+    <div class="card" data-reveal>
+      <h4>Open Python</h4>
+      <p class="muted mb-0 text-sm">
+        Every pipeline step is implemented in plain Python scripts and Jupyter notebooks.
+        No proprietary tooling, no locked-in services.
+      </p>
+    </div>
+    <div class="card" data-reveal data-reveal-delay="2">
+      <h4>Portable</h4>
+      <p class="muted mb-0 text-sm">
+        Point the same pipeline at any Voyant CSV and any NLLB-200-supported language.
+        Amharic, Swahili, isiZulu — same codebase.
+      </p>
+    </div>
+    <div class="card" data-reveal data-reveal-delay="3">
+      <h4>Auditable</h4>
+      <p class="muted mb-0 text-sm">
+        Every translation record carries its engine source, similarity score, QA flags,
+        and full reviewer history — provenance-aware by design.
+      </p>
+    </div>
+  </div>
+
+  <div class="card mt-0" style="margin-top: 16px;" data-reveal>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h4 style="margin-bottom: 4px;">Ready to help validate translations?</h4>
+        <p class="muted mb-0 text-sm">
+          Native or fluent speakers of Yoruba and other African languages are welcome.
+        </p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-shrink: 0;">
+        <a class="btn btn-primary" href="{% url 'l10n_apply' %}">Apply to join</a>
+        <a class="btn" href="{% url 'l10n_call_translators' %}">Learn more</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

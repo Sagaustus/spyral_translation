@@ -1,0 +1,58 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Approve — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <div class="action-strip">
+      <h2 style="margin: 0;">Final Approval</h2>
+      <a class="btn btn-small" href="{% url 'l10n_approve' %}">&#8592; Back to queue</a>
+    </div>
+    <div class="badge-group" style="margin-top: 10px;">
+      <span class="badge" data-status="{{ tr.status }}">{{ tr.get_status_display }}</span>
+      <span class="badge">{{ tr.locale.name }}</span>
+      {% if tr.qa_flags %}
+        <span class="badge badge-qa">&#9888; QA: {{ tr.qa_flags|length }} flag{{ tr.qa_flags|length|pluralize }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <p style="margin-bottom: 14px;">
+        <strong>Key:</strong>
+        <code style="word-break: break-all;">{{ tr.string_unit.location }} :: {{ tr.string_unit.message_id }}</code>
+      </p>
+
+      <h3 style="margin-top: 20px;">Source (English)</h3>
+      <pre>{{ tr.string_unit.source_text }}</pre>
+
+      <h3>AI draft</h3>
+      <pre>{{ tr.machine_draft }}</pre>
+
+      {% if tr.reviewer_text %}
+        <h3>Reviewer suggestion</h3>
+        <pre>{{ tr.reviewer_text }}</pre>
+      {% endif %}
+
+      {% if tr.translator_text %}
+        <h3>Translator suggestion</h3>
+        <pre>{{ tr.translator_text }}</pre>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top: 0;">Approved translation</h3>
+      <p class="muted text-sm" style="margin-bottom: 18px;">
+        This text is what exports will use.
+      </p>
+      <form method="post" class="js-dirty-check">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Approve</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

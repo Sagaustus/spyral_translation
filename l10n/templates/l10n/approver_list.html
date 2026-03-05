@@ -1,0 +1,57 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Approver Queue — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <h2>Approver Queue</h2>
+    <p class="muted mb-0">Translations submitted for final approval (up to 200).</p>
+  </div>
+
+  <div class="card mt-0">
+    <form method="get" class="form-row" style="display: flex; gap: 12px; align-items: end; flex-wrap: wrap;">
+      <div style="min-width: 240px;">
+        <label for="id_locale">Locale</label>
+        <select id="id_locale" name="locale">
+          {% for loc in locales %}
+            <option value="{{ loc.code }}" {% if selected_locale and loc.id == selected_locale.id %}selected{% endif %}>
+              {{ loc.name }} ({{ loc.code }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <button class="btn btn-small" type="submit">Change</button>
+      </div>
+    </form>
+  </div>
+
+  {% if translations %}
+    <div class="card">
+      <ul class="review-list">
+        {% for tr in translations %}
+          <li class="review-item">
+            <div class="review-row">
+              <a class="review-link" href="{% url 'l10n_approve_detail' tr.id %}">
+                {{ tr.string_unit.location }} :: {{ tr.string_unit.message_id }}
+              </a>
+              <span class="badge-group">
+                <span class="badge" data-status="{{ tr.status }}">{{ tr.get_status_display }}</span>
+                {% if tr.qa_flags %}
+                  <span class="badge badge-qa">QA: {{ tr.qa_flags|length }}</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="review-meta">
+              <strong>Source:</strong> {{ tr.string_unit.source_text|truncatechars:160 }}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% else %}
+    <div class="card">
+      <p class="mb-0 muted">No items awaiting approval.</p>
+    </div>
+  {% endif %}
+{% endblock %}

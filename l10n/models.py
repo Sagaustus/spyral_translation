@@ -80,7 +80,26 @@ class Translation(models.Model):
 
     approved_text = models.TextField(blank=True, null=True)
     reviewer_text = models.TextField(blank=True, null=True)
+    translator_text = models.TextField(blank=True, null=True)
     machine_draft = models.TextField(blank=True, null=True)
+
+    # Pipeline provenance fields — populated by run_pipeline
+    back_translation = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Machine draft translated back to English (for similarity scoring).",
+    )
+    similarity_score = models.FloatField(
+        blank=True,
+        null=True,
+        help_text="Cosine similarity between source and back-translation (0–1). "
+        "Below threshold → QA warning.",
+    )
+    engine = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="Translation engine that produced machine_draft, e.g. nllb-200-distilled-600M.",
+    )
 
     qa_flags = models.JSONField(default=list, blank=True)
 
@@ -102,6 +121,23 @@ class Translation(models.Model):
         blank=True,
         null=True,
     )
+
+    translator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="l10n_translations_translated",
+    )
+
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="l10n_translations_approved",
+    )
+    approved_at = models.DateTimeField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -135,10 +171,13 @@ class Translation(models.Model):
     def save(self, *args, **kwargs):
         approved = (self.approved_text or "").strip()
         reviewer = (self.reviewer_text or "").strip()
+        translator = (self.translator_text or "").strip()
         machine = (self.machine_draft or "").strip()
 
         if approved:
             candidate = approved
+        elif translator:
+            candidate = translator
         elif reviewer:
             candidate = reviewer
         elif machine:

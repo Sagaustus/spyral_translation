@@ -1,0 +1,120 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Translation Progress — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <h2>Translation Progress</h2>
+    <p class="muted mb-0">
+      Live per-language progress across all enabled locales. Each bar reflects
+      the proportion of strings that have passed human review and been approved.
+    </p>
+  </div>
+
+  <div class="stat-row" data-reveal>
+    <div class="stat-card">
+      <span class="stat-card__number">{{ total_strings }}</span>
+      <span class="stat-card__label">Total strings</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card__number">{{ locale_stats|length }}</span>
+      <span class="stat-card__label">Active locales</span>
+    </div>
+    {% for s in locale_stats %}
+      {% if s.pct >= 100 %}
+        <div class="stat-card stat-card--success">
+          <span class="stat-card__number">{{ s.locale.code }}</span>
+          <span class="stat-card__label">Complete &#10003;</span>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="section-label"><h3>By language</h3></div>
+
+  {% if locale_stats %}
+    <div class="locale-progress-grid">
+      {% for s in locale_stats %}
+        <div class="locale-card" data-reveal>
+          <div class="locale-card-header">
+            <div class="locale-card-meta">
+              <div class="locale-name">{{ s.locale.name }}</div>
+              <span class="locale-code">{{ s.locale.code }}</span>
+            </div>
+            <div class="locale-pct">{{ s.pct }}%</div>
+          </div>
+
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" data-width="{{ s.pct }}"></div>
+          </div>
+
+          <div class="locale-stat-row">
+            <div class="locale-stat">
+              <strong>{{ s.approved }}</strong> approved
+            </div>
+            <div class="locale-stat">
+              <strong>{{ s.in_review }}</strong> in review
+            </div>
+            <div class="locale-stat">
+              <strong>{{ s.machine_draft }}</strong> draft
+            </div>
+            {% if s.qa_warnings %}
+              <div class="locale-stat">
+                <strong style="color: var(--clr-warning);">{{ s.qa_warnings }}</strong>
+                <span style="color: var(--clr-warning);">QA flags</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card">
+      <p class="mb-0 muted">
+        No locales are enabled yet. Once strings are imported and locales configured,
+        progress will appear here.
+      </p>
+    </div>
+  {% endif %}
+
+  <div class="section-label"><h3>How strings are counted</h3></div>
+
+  <div class="grid cols-3">
+    <div class="card" data-reveal>
+      <h4>Approved</h4>
+      <p class="muted mb-0 text-sm">
+        Human reviewers have accepted the AI draft (or edited it) and marked it
+        as ready for export. These strings drive the completion percentage.
+      </p>
+    </div>
+    <div class="card" data-reveal data-reveal-delay="2">
+      <h4>In review</h4>
+      <p class="muted mb-0 text-sm">
+        A reviewer has opened the string and is currently working on it.
+        Temporarily locked from other reviewers.
+      </p>
+    </div>
+    <div class="card" data-reveal data-reveal-delay="3">
+      <h4>Machine draft</h4>
+      <p class="muted mb-0 text-sm">
+        AI translation generated but not yet touched by a human reviewer.
+        May include QA flags if automated checks detected issues.
+      </p>
+    </div>
+  </div>
+
+  <div class="card mt-0" style="margin-top: 16px;" data-reveal>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h4 style="margin-bottom: 4px;">Help us move these bars forward</h4>
+        <p class="muted mb-0 text-sm">
+          Native or fluent speakers of any listed language can apply to join the reviewer pool.
+        </p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-shrink: 0;">
+        <a class="btn btn-primary" href="{% url 'l10n_apply' %}">Apply to join</a>
+        <a class="btn" href="{% url 'l10n_review' %}">Open review queue</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

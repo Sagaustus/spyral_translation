@@ -39,17 +39,42 @@
       <pre id="js-source-text">{{ tr.string_unit.source_text }}</pre>
 
       <h3>AI draft</h3>
+      {% if tr.engine %}
+        <p class="muted text-sm" style="margin-bottom: 6px;">
+          Engine: <code>{{ tr.engine }}</code>
+        </p>
+      {% endif %}
       <div class="form-actions" style="margin-top: 0; margin-bottom: 6px;">
         <button class="btn btn-small" type="button" data-copy data-copy-target="#js-ai-draft">Copy AI draft</button>
       </div>
       <pre id="js-ai-draft">{{ tr.machine_draft }}</pre>
+
+      {% if tr.back_translation %}
+        <h3>Back-translation (English)</h3>
+        {% if tr.similarity_score is not None %}
+          <p class="muted text-sm" style="margin-bottom: 6px;">
+            Semantic similarity:
+            <strong style="color: {% if tr.similarity_score >= 0.75 %}var(--clr-success){% elif tr.similarity_score >= 0.5 %}var(--clr-warning){% else %}var(--clr-danger){% endif %};">
+              {{ tr.similarity_score|floatformat:3 }}
+            </strong>
+            <span class="muted">(1.0 = identical, 0.0 = unrelated)</span>
+          </p>
+        {% endif %}
+        <pre>{{ tr.back_translation }}</pre>
+        <p class="muted text-sm mb-0">
+          If the back-translation means the same as the source, the draft is likely correct.
+        </p>
+      {% endif %}
     </div>
 
     <div class="card">
       <h3 style="margin-top: 0;">Your review</h3>
-      <p class="muted" style="font-size: 0.88rem; margin-bottom: 18px;">
-        Keyboard: <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Ctrl+Enter</kbd> to save &nbsp;&middot;&nbsp;
-        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Esc</kbd> to go back
+      <p class="muted text-sm" style="margin-bottom: 18px;">
+        Keyboard:
+        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Ctrl+Enter</kbd>
+        to save &nbsp;&middot;&nbsp;
+        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Esc</kbd>
+        to go back
       </p>
       <form method="post" class="js-dirty-check">
         {% csrf_token %}
@@ -59,13 +84,30 @@
           <button class="btn btn-small" type="button" data-copy data-copy-from="#id_reviewer_text">Copy my text</button>
         </div>
       </form>
+
+      <div class="section-label" style="margin-top: 28px;"><h3>Review guide</h3></div>
+      <ul class="muted text-sm" style="margin-top: 0; line-height: 1.7;">
+        <li><strong>Accept:</strong> Copy the AI draft into the box above, set status to <em>Approve (send to approver)</em>.</li>
+        <li><strong>Edit:</strong> Fix terminology or placeholder placement, then send to approver.</li>
+        <li><strong>Reject:</strong> Set status to <em>Disapprove (send to translator)</em> if the draft is unusable.</li>
+        <li><strong>Flag:</strong> Use <em>Flagged</em> to escalate dialect or cultural questions.</li>
+      </ul>
     </div>
   </div>
 
   {% if tr.qa_flags %}
-    <details style="margin-top: 16px;">
-      <summary>QA flags ({{ tr.qa_flags|length }})</summary>
-      <pre style="margin-top: 14px;">{{ tr.qa_flags }}</pre>
+    <details style="margin-top: 16px;" open>
+      <summary>QA flags ({{ tr.qa_flags|length }}) — review before approving</summary>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+        {% for flag in tr.qa_flags %}
+          <div class="alert {% if flag.code == 'low_similarity' %}alert--warning{% else %}alert--error{% endif %}">
+            <strong>{{ flag.code }}</strong> — {{ flag.message }}
+            {% if flag.details %}
+              <pre style="margin: 6px 0 0; font-size: 0.8rem; background: transparent; border: none; padding: 0;">{{ flag.details }}</pre>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
     </details>
   {% endif %}
 {% endblock %}
