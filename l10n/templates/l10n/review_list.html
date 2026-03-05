@@ -1,0 +1,29 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Review Queue — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>Review Queue</h2>
+
+  <div class="card">
+    <p style="margin: 0;">
+      Language: <strong>{{ locale.name }}</strong> ({{ locale.code }})
+    </p>
+  </div>
+
+  {% if translations %}
+    <div class="card">
+      <ul>
+        {% for tr in translations %}
+          <li>
+            <a href="{% url 'l10n_review_detail' tr.id %}">{{ tr.string_unit.location }} :: {{ tr.string_unit.message_id }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% else %}
+    <div class="card">
+      <p>No items to review right now.</p>
+    </div>
+  {% endif %}
+{% endblock %}

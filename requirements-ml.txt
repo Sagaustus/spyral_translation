@@ -1,0 +1,18 @@
+# Optional ML/GPU translation pipeline dependencies.
+# Install separately to keep the web app lightweight (and Heroku-friendly).
+#
+# NOTE on GPU:
+# - Install a CUDA-enabled PyTorch build appropriate for your CUDA/driver.
+#   See https://pytorch.org/get-started/locally/
+# - If you install CPU-only torch, the pipeline still runs (slower).
+
+torch
+transformers>=4.41
+accelerate>=0.30
+sentencepiece
+sacremoses
+huggingface_hub
+sentence-transformers
+datasets>=2.20
+sacrebleu>=2.4
+openai>=1.0

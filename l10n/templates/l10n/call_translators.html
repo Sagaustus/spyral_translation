@@ -1,0 +1,50 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Call for Translators — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>Call for Human-in-the-Loop Translators</h2>
+
+  <div class="card">
+    <p>
+      We are recruiting Yoruba-speaking scholars, students, and community members to review AI-generated interface translations.
+      Your role is to <strong>approve</strong>, <strong>revise</strong>, or <strong>reject</strong> translations so that the final interface is accurate,
+      culturally appropriate, and consistent.
+    </p>
+
+    <p>
+      The workflow is designed to make review safe and efficient: placeholders and HTML tags are protected, and automated QA checks
+      flag risky strings (missing placeholders, tag mismatches, unbalanced braces, etc.).
+    </p>
+  </div>
+
+  <h3>What reviewers do</h3>
+  <ul>
+    <li>Check meaning and tone for Yoruba interface text.</li>
+    <li>Ensure placeholders remain intact (e.g., <code>%s</code>, <code>{name}</code>).</li>
+    <li>Ensure basic HTML tags remain intact where used (e.g., <code>&lt;b&gt;</code>, <code>&lt;a&gt;</code>).</li>
+    <li>Resolve terminology consistency (same UI concept → same Yoruba term).</li>
+  </ul>
+
+  <h3>How approval works (in this site)</h3>
+  <div class="card">
+    <ol>
+      <li>AI drafts land in <code>machine_draft</code>.</li>
+      <li>Reviewers edit <code>reviewer_text</code> and set status to In review / Flagged.</li>
+      <li>A superadmin approves final text into <code>approved_text</code> (status Approved).</li>
+    </ol>
+    <p class="muted" style="margin-bottom: 0;">
+      Access is currently staff-only via Django admin.
+    </p>
+  </div>
+
+  <h3>How to join</h3>
+  <p>
+    Submit an application to become a reviewer. Once approved by a SuperAdmin, you will be able to review AI drafts
+    for the language you selected.
+  </p>
+
+  <p>
+    <a class="btn" href="{% url 'l10n_apply' %}">Apply to be a translator</a>
+  </p>
+{% endblock %}

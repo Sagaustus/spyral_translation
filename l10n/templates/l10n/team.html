@@ -1,0 +1,23 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Team Members — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>Team Members</h2>
+
+  <div class="card">
+    <p>
+      Team members and volunteer reviewers can apply to participate in the human-in-the-loop validation process.
+      Applicants provide affiliation and language background to help ensure high-quality review.
+    </p>
+    <p style="margin-bottom: 0;">
+      <a class="btn" href="{% url 'l10n_apply' %}">Apply</a>
+      <a class="btn" href="{% url 'l10n_login' %}">Login</a>
+    </p>
+  </div>
+
+  <p>
+    Want to join the reviewer pool? See the
+    <a href="{% url 'l10n_call_translators' %}">Call for Human-in-the-Loop Translators</a>.
+  </p>
+{% endblock %}

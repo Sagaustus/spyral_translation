@@ -1,0 +1,23 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Apply to be a Translator — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>Apply to be a Human-in-the-Loop Translator</h2>
+
+  <div class="card">
+    <p>
+      Submit this form to request reviewer access for a specific interface language.
+      After submitting, you can log in and explore the site, but you will not be able to review translations
+      until a SuperAdmin approves your application.
+    </p>
+  </div>
+
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Submit application</button>
+    </form>
+  </div>
+{% endblock %}

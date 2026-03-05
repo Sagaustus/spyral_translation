@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}African Localization of Voyant Tools{% endblock %}</title>
+    <style>
+      body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.5; }
+      header { border-bottom: 1px solid #ddd; padding: 16px; }
+      main { padding: 20px 16px; max-width: 1000px; margin: 0 auto; }
+      nav a { margin-right: 14px; text-decoration: none; }
+      nav a:hover { text-decoration: underline; }
+      .muted { color: #555; }
+      .card { border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin: 12px 0; }
+      .btn { display: inline-block; padding: 8px 12px; border: 1px solid #333; border-radius: 6px; text-decoration: none; }
+      .btn:hover { background: #f4f4f4; }
+      footer { border-top: 1px solid #ddd; padding: 16px; }
+      footer .inner { max-width: 1000px; margin: 0 auto; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="max-width: 1000px; margin: 0 auto;">
+        <h1 style="margin: 0 0 8px 0;">African Localization of Voyant Tools</h1>
+        <p class="muted" style="margin: 0 0 10px 0;">
+          A reproducible, AI-assisted workflow for translating the Voyant Tools interface into Yoruba.
+        </p>
+        <nav>
+          <a href="{% url 'l10n_home' %}">Home</a>
+          <a href="{% url 'l10n_about' %}">About the Project</a>
+          <a href="{% url 'l10n_call_translators' %}">Call for Human-in-the-Loop Translators</a>
+          <a href="{% url 'l10n_team' %}">Team Members</a>
+
+          {% if user.is_authenticated %}
+            <a href="{% url 'l10n_application' %}">My Application</a>
+            <a href="{% url 'l10n_review' %}">Review</a>
+            <a href="{% url 'l10n_logout' %}">Logout</a>
+          {% else %}
+            <a href="{% url 'l10n_login' %}">Login</a>
+          {% endif %}
+
+          {% if user.is_staff %}
+            <a href="{% url 'l10n_dashboard' %}">Staff Dashboard</a>
+          {% endif %}
+          <a href="{% url 'admin:index' %}">Admin</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+      <div class="inner">
+        <div class="muted">
+          Built with Django for a transparent, replicable localization workflow.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

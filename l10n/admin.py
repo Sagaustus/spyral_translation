@@ -5,7 +5,9 @@ from django.db import models
 from django.db.models import QuerySet
 from django.forms import Textarea
 
-from .models import Locale, LocaleAssignment, StringUnit, Translation
+from django.contrib.auth.models import Group
+
+from .models import Locale, LocaleAssignment, StringUnit, Translation, TranslatorApplication
 
 
 def _truncate(value: str | None, length: int = 80) -> str:
@@ -69,6 +71,45 @@ class LocaleAssignmentAdmin(admin.ModelAdmin):
     )
     autocomplete_fields = ("user", "locale")
     ordering = ("locale__code", "user__username")
+
+
+@admin.action(description="Approve applicants (grant reviewer access)")
+def approve_applicants(_modeladmin, request, queryset):
+    if not _is_superadmin(request.user):
+        messages.error(request, "You do not have permission to approve applicants.")
+        return
+
+    reviewer_group, _ = Group.objects.get_or_create(name="L10N_REVIEWER")
+
+    updated = 0
+    for app in queryset.select_related("user", "desired_locale"):
+        app.status = TranslatorApplication.ApplicationStatus.APPROVED
+        app.save(update_fields=["status", "updated_at"])
+
+        reviewer_group.user_set.add(app.user)
+        LocaleAssignment.objects.get_or_create(user=app.user, locale=app.desired_locale)
+        updated += 1
+
+    messages.success(request, f"Approved {updated} applicant(s).")
+
+
+@admin.action(description="Reject applicants")
+def reject_applicants(_modeladmin, request, queryset):
+    if not _is_superadmin(request.user):
+        messages.error(request, "You do not have permission to reject applicants.")
+        return
+    updated = queryset.update(status=TranslatorApplication.ApplicationStatus.REJECTED)
+    messages.success(request, f"Rejected {updated} applicant(s).")
+
+
+@admin.register(TranslatorApplication)
+class TranslatorApplicationAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "user", "desired_locale", "status", "created_at")
+    list_filter = ("status", "desired_locale")
+    search_fields = ("full_name", "user__username", "user__email", "affiliation")
+    ordering = ("-created_at",)
+    autocomplete_fields = ("desired_locale", "user")
+    actions = (approve_applicants, reject_applicants)
 
 
 def _is_in_group(user, group_name: str) -> bool:

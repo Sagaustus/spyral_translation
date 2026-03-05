@@ -178,3 +178,43 @@ class LocaleAssignment(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user} -> {self.locale.code}"
+
+
+class TranslatorApplication(models.Model):
+    class ApplicationStatus(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="translator_application",
+    )
+
+    full_name = models.CharField(max_length=200)
+    affiliation = models.CharField(max_length=255, blank=True)
+
+    desired_locale = models.ForeignKey(Locale, on_delete=models.PROTECT, related_name="applications")
+
+    current_country = models.CharField(max_length=2, blank=True)
+    home_country = models.CharField(max_length=2, blank=True)
+
+    first_language = models.CharField(max_length=16, blank=True)
+    second_language = models.CharField(max_length=16, blank=True)
+    dialect = models.CharField(max_length=100, blank=True)
+
+    wants_acknowledgement = models.BooleanField(default=True)
+    acknowledgement_name = models.CharField(max_length=200, blank=True)
+
+    status = models.CharField(
+        max_length=16,
+        choices=ApplicationStatus.choices,
+        default=ApplicationStatus.PENDING,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{self.full_name} ({self.user}) -> {self.desired_locale.code} [{self.status}]"

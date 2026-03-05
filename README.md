@@ -7,6 +7,32 @@ Minimal Django starter for the Voyant translation workflow.
 - Install deps: `pip install -r requirements.txt -r requirements-dev.txt`.
 - Copy your Voyant CSV to `data/voyant_strings.csv` (a placeholder `.keep` is present).
 
+## Optional: GPU translation pipeline (NLLB-200 + XLM-R)
+
+This repo keeps ML dependencies separate so the web app stays lightweight.
+
+- Install optional ML deps: `pip install -r requirements-ml.txt`
+- For GPU acceleration, install a CUDA-enabled PyTorch build appropriate for your system (see PyTorch install selector).
+
+Environment variables (see `.env.example`):
+- `HF_TOKEN` (optional, recommended for gated models / higher rate limits)
+- `NLLB_MODEL_ID` (default `facebook/nllb-200-distilled-600M`)
+- `XLMR_SIM_MODEL_ID` (default `sentence-transformers/paraphrase-xlm-r-multilingual-v1`)
+
+Generate Yoruba machine drafts (writes to DB):
+- `python manage.py generate_machine_drafts --locale yo --limit 200 --only-missing`
+
+Dry-run (no DB writes):
+- `python manage.py generate_machine_drafts --locale yo --limit 50 --only-missing --dry-run`
+
+### AfroLingu-MT benchmark (UBC-NLP)
+
+AfroLingu-MT is a benchmark dataset (not an MT model) and is gated on Hugging Face.
+You must accept the dataset access conditions on HF, then set `HF_TOKEN`.
+
+Evaluate NLLB on English→Yoruba examples:
+- `python manage.py evaluate_afrolingu_mt --src eng --tgt yor --split test --limit 200`
+
 ## Running
 - Start Postgres: `docker compose up -d`.
 - Run migrations: `python manage.py migrate`.

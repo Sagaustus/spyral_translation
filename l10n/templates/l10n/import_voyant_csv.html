@@ -1,0 +1,29 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Import Voyant CSV — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>Import Voyant CSV</h2>
+
+  <div class="card">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Run import</button>
+    </form>
+  </div>
+
+  {% if output %}
+    <div class="card">
+      <h3 style="margin-top: 0;">Result</h3>
+      <pre>{{ output }}</pre>
+    </div>
+  {% endif %}
+
+  {% if error %}
+    <div class="card">
+      <h3 style="margin-top: 0;">Error</h3>
+      <pre>{{ error }}</pre>
+    </div>
+  {% endif %}
+{% endblock %}

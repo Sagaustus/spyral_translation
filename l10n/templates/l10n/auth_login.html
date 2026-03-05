@@ -1,0 +1,27 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Login — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>Team Members Login</h2>
+
+  <div class="card">
+    {% if form.errors %}
+      <p><strong>Login failed.</strong> Please check your username/password.</p>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Log in</button>
+    </form>
+
+    <p class="muted" style="margin-bottom: 0;">
+      Need to join as a reviewer? <a href="{% url 'l10n_apply' %}">Apply here</a>.
+    </p>
+  </div>
+
+  {% if user.is_authenticated %}
+    <p class="muted">You are already logged in as {{ user.get_username }}.</p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Staff Dashboard — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>Staff Dashboard (Yoruba)</h2>
+
+  <div class="card">
+    <h3 style="margin-top: 0;">Summary</h3>
+    <ul>
+      <li>Total string units: <strong>{{ total_string_units }}</strong></li>
+      <li>Approved (yo): <strong>{{ approved_count }}</strong></li>
+      <li>Missing approved (yo): <strong>{{ missing_count }}</strong></li>
+      <li>QA warnings (yo): <strong>{{ qa_warning_count }}</strong></li>
+      <li>Stale (yo): <strong>{{ stale_count }}</strong></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top: 0;">Actions</h3>
+    <ul>
+      <li><a href="{% url 'l10n_import_voyant_csv' %}">Import Voyant CSV</a></li>
+      <li><a href="{% url 'l10n_export_yo_csv' %}">Export Yoruba CSV</a></li>
+      <li>
+        <a href="{% url 'admin:l10n_translation_changelist' %}?locale__code__exact=yo">
+          Review Yoruba translations in Admin
+        </a>
+      </li>
+    </ul>
+  </div>
+{% endblock %}

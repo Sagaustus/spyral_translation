@@ -1,0 +1,30 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}Review Translation — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>Review Translation</h2>
+
+  <div class="card">
+    <p><strong>Key:</strong> {{ tr.string_unit.location }} :: {{ tr.string_unit.message_id }}</p>
+    <p><strong>Source (English):</strong></p>
+    <pre>{{ tr.string_unit.source_text }}</pre>
+    <p><strong>AI draft:</strong></p>
+    <pre>{{ tr.machine_draft }}</pre>
+  </div>
+
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Save review</button>
+    </form>
+  </div>
+
+  {% if tr.qa_flags %}
+    <div class="card">
+      <p><strong>QA flags:</strong></p>
+      <pre>{{ tr.qa_flags }}</pre>
+    </div>
+  {% endif %}
+{% endblock %}

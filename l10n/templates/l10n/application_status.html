@@ -1,0 +1,33 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}My Application — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>My Application</h2>
+
+  {% if application %}
+    <div class="card">
+      <p><strong>Status:</strong> {{ application.status }}</p>
+      <p><strong>Requested language:</strong> {{ application.desired_locale.name }} ({{ application.desired_locale.code }})</p>
+      <p class="muted" style="margin-bottom: 0;">
+        If your status is Pending, you can explore the site but cannot review translations until approved.
+      </p>
+    </div>
+
+    {% if application.status == "APPROVED" %}
+      <div class="card">
+        <p style="margin: 0;">
+          You have been approved. You can now review AI drafts for your assigned language.
+        </p>
+        <p style="margin: 10px 0 0 0;">
+          <a class="btn" href="{% url 'l10n_review' %}">Open Review Queue</a>
+        </p>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="card">
+      <p>You do not have an application on file.</p>
+      <p><a class="btn" href="{% url 'l10n_apply' %}">Apply to be a translator</a></p>
+    </div>
+  {% endif %}
+{% endblock %}

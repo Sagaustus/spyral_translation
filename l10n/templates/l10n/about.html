@@ -1,0 +1,35 @@
+{% extends "l10n/base.html" %}
+
+{% block title %}About the Project — African Localization of Voyant Tools{% endblock %}
+
+{% block content %}
+  <h2>About the Project</h2>
+
+  <div class="card">
+    <p>
+      Voyant Tools has supported multiple interface languages for years, mostly through manual, community-driven translation.
+      Underrepresented African languages have often been excluded due to limited NLP resources, limited parallel corpora,
+      and the lack of scalable localization workflows.
+    </p>
+
+    <p>
+      This project demonstrates a transparent and reproducible workflow for translating the Voyant Tools interface into
+      <strong>Yoruba</strong>. The pipeline combines multiple engines and checks to reduce errors while keeping humans in control.
+    </p>
+  </div>
+
+  <h3>Workflow (high level)</h3>
+  <ul>
+    <li><strong>Source strings</strong> are imported from Voyant’s CSV into a database.</li>
+    <li><strong>AI drafts</strong> are generated (e.g., NLLB-200; optionally LLMs) while protecting placeholders and HTML tags.</li>
+    <li><strong>Verification</strong> uses back-translation and semantic similarity scoring (XLM-R-based) to detect divergences.</li>
+    <li><strong>QA checks</strong> detect placeholder/tag mismatches and other formatting risks.</li>
+    <li><strong>Human review</strong> approves or rejects translations (human-in-the-loop).</li>
+  </ul>
+
+  <h3>Why this matters</h3>
+  <p>
+    Even when full NLP analysis for a language is not yet available inside Voyant, multilingual interface “skins” are a meaningful
+    step toward accessibility and language justice in digital scholarship.
+  </p>
+{% endblock %}
