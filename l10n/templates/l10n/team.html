@@ -3,46 +3,54 @@
 {% block title %}Current Team — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>Current Team</h2>
-
-  <div class="card">
-    <p>
-      Team members and volunteer reviewers can apply to participate in the human-in-the-loop validation process.
-      Applicants provide affiliation and language background to help ensure high-quality review.
-    </p>
-    <p style="margin-bottom: 0;">
-      <a class="btn" href="{% url 'l10n_apply' %}">Apply</a>
-      <a class="btn" href="{% url 'l10n_login' %}">Login</a>
+  <div class="page-heading">
+    <h2>Current Team</h2>
+    <p class="muted mb-0">
+      Team members and volunteer reviewers who participate in the human-in-the-loop validation process.
     </p>
   </div>
 
+  <div class="card mt-0" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <p class="mb-0">
+      Applicants provide affiliation and language background to help ensure high-quality review.
+    </p>
+    <div style="display: flex; gap: 10px; flex-shrink: 0;">
+      <a class="btn btn-primary" href="{% url 'l10n_apply' %}">Apply to join</a>
+      <a class="btn" href="{% url 'l10n_login' %}">Login</a>
+    </div>
+  </div>
+
   {% if approved_applications %}
-    <h3>Approved members</h3>
-    {% for app in approved_applications %}
-      <div class="card">
-        <div style="display: flex; gap: 14px; align-items: flex-start;">
-          {% if app.photo %}
-            <img
-              src="{{ app.photo.url }}"
-              alt="{{ app.full_name }}"
-              style="width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;"
-            />
-          {% endif %}
-          <div>
-            <div><strong>{{ app.full_name }}</strong></div>
-            {% if app.affiliation %}<div class="muted">{{ app.affiliation }}</div>{% endif %}
-            <div class="muted">Language: {{ app.desired_locale.name }} ({{ app.desired_locale.code }})</div>
+    <div class="section-label"><h3>Approved members</h3></div>
+    <div class="grid cols-2">
+      {% for app in approved_applications %}
+        <div class="card">
+          <div class="member-card">
+            {% if app.photo %}
+              <img
+                class="member-photo"
+                src="{{ app.photo.url }}"
+                alt="{{ app.full_name }}"
+              />
+            {% endif %}
+            <div class="member-info">
+              <p class="member-name">{{ app.full_name }}</p>
+              {% if app.affiliation %}
+                <p class="member-affiliation">{{ app.affiliation }}</p>
+              {% endif %}
+              <span class="badge">{{ app.desired_locale.name }} ({{ app.desired_locale.code }})</span>
+            </div>
           </div>
         </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
+    </div>
   {% else %}
     <div class="card">
-      <p style="margin: 0;">No approved team members yet.</p>
+      <p class="mb-0 muted">No approved team members yet. Be the first to apply!</p>
     </div>
   {% endif %}
 
-  <p>
+  <p style="margin-top: 24px;">
     Want to join the reviewer pool? See the
     <a href="{% url 'l10n_call_translators' %}">Call for Human-in-the-Loop Translators</a>.
   </p>

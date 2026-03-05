@@ -3,48 +3,64 @@
 {% block title %}Call for Translators — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>Call for Human-in-the-Loop Translators</h2>
-
-  <div class="card">
-    <p>
-      We are recruiting Yoruba-speaking scholars, students, and community members to review AI-generated interface translations.
-      Your role is to <strong>approve</strong>, <strong>revise</strong>, or <strong>reject</strong> translations so that the final interface is accurate,
-      culturally appropriate, and consistent.
-    </p>
-
-    <p>
-      The workflow is designed to make review safe and efficient: placeholders and HTML tags are protected, and automated QA checks
-      flag risky strings (missing placeholders, tag mismatches, unbalanced braces, etc.).
+  <div class="page-heading">
+    <h2>Call for Human-in-the-Loop Translators</h2>
+    <p class="muted mb-0">
+      We're recruiting African language speakers — scholars, students, and community members — to review AI-generated interface translations.
     </p>
   </div>
 
-  <h3>What reviewers do</h3>
-  <ul>
-    <li>Check meaning and tone for Yoruba interface text.</li>
-    <li>Ensure placeholders remain intact (e.g., <code>%s</code>, <code>{name}</code>).</li>
-    <li>Ensure basic HTML tags remain intact where used (e.g., <code>&lt;b&gt;</code>, <code>&lt;a&gt;</code>).</li>
-    <li>Resolve terminology consistency (same UI concept → same Yoruba term).</li>
-  </ul>
+  <div class="grid cols-2">
+    <div class="card mt-0">
+      <div class="feature-icon" aria-hidden="true">&#127942;</div>
+      <h3 style="margin-top: 0;">Who we're looking for</h3>
+      <p class="muted">
+        Your role is to approve, revise, or reject AI drafts so final localizations are accurate,
+        culturally appropriate, and consistent.
+      </p>
+      <p class="mb-0"><a class="btn btn-primary" href="{% url 'l10n_apply' %}">Apply to join</a></p>
+    </div>
+    <div class="card mt-0">
+      <div class="feature-icon" aria-hidden="true">&#128737;&#65039;</div>
+      <h3 style="margin-top: 0;">How safety works</h3>
+      <p class="muted mb-0">
+        Placeholders and HTML tags are protected, and automated QA checks flag risky strings
+        (missing placeholders, tag mismatches, unbalanced braces, etc.) so humans can focus on
+        meaning and consistency.
+      </p>
+    </div>
+  </div>
 
-  <h3>How approval works (in this site)</h3>
-  <div class="card">
-    <ol>
+  <div class="section-label"><h3>What reviewers do</h3></div>
+
+  <div class="card mt-0">
+    <ul class="mb-0">
+      <li>Check meaning and tone for interface text in your selected language.</li>
+      <li>Ensure placeholders remain intact (e.g., <code>%s</code>, <code>{name}</code>).</li>
+      <li>Ensure basic HTML tags remain intact where used (e.g., <code>&lt;b&gt;</code>, <code>&lt;a&gt;</code>).</li>
+      <li>Resolve terminology consistency — same UI concept maps to the same term in your language.</li>
+    </ul>
+  </div>
+
+  <div class="section-label"><h3>How approval works</h3></div>
+
+  <div class="card mt-0">
+    <ol style="margin-bottom: 14px;">
       <li>AI drafts land in <code>machine_draft</code>.</li>
-      <li>Reviewers edit <code>reviewer_text</code> and set status to In review / Flagged.</li>
-      <li>A superadmin approves final text into <code>approved_text</code> (status Approved).</li>
+      <li>Reviewers edit <code>reviewer_text</code> and set status to In Review or Flagged.</li>
+      <li>A SuperAdmin approves final text into <code>approved_text</code> (status Approved).</li>
     </ol>
-    <p class="muted" style="margin-bottom: 0;">
+    <p class="muted mb-0" style="font-size: 0.88rem;">
       Access is currently staff-only via Django admin.
     </p>
   </div>
 
-  <h3>How to join</h3>
-  <p>
-    Submit an application to become a reviewer. Once approved by a SuperAdmin, you will be able to review AI drafts
-    for the language you selected.
-  </p>
+  <div class="section-label"><h3>How to join</h3></div>
 
-  <p>
-    <a class="btn" href="{% url 'l10n_apply' %}">Apply to be a translator</a>
-  </p>
+  <div class="card mt-0" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+    <p class="mb-0">
+      Submit an application. Once approved by a SuperAdmin, you will be able to review AI drafts for your selected language.
+    </p>
+    <a class="btn btn-primary" style="flex-shrink: 0;" href="{% url 'l10n_apply' %}">Apply to be a translator</a>
+  </div>
 {% endblock %}

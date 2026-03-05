@@ -3,25 +3,36 @@
 {% block title %}Login — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>Team Members Login</h2>
+  <div style="max-width: 440px; margin: 0 auto;">
+    <div class="page-heading">
+      <h2>Team Login</h2>
+      <p class="muted mb-0">Sign in to access your review queue and translations.</p>
+    </div>
 
-  <div class="card">
-    {% if form.errors %}
-      <p><strong>Login failed.</strong> Please check your username/password.</p>
+    <div class="card mt-0">
+      {% if form.errors %}
+        <div style="background: var(--clr-danger-bg); border: 1px solid var(--clr-danger-border); border-radius: var(--r); padding: 12px 16px; margin-bottom: 18px; color: var(--clr-danger); font-weight: 500; font-size: 0.9rem;">
+          Login failed. Please check your username and password.
+        </div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Sign in</button>
+        </div>
+      </form>
+
+      <p class="muted mb-0" style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--clr-border); font-size: 0.88rem;">
+        Need reviewer access? <a href="{% url 'l10n_apply' %}">Apply here</a>.
+      </p>
+    </div>
+
+    {% if user.is_authenticated %}
+      <p class="muted" style="text-align: center; margin-top: 16px; font-size: 0.88rem;">
+        You are already signed in as <strong>{{ user.get_username }}</strong>.
+      </p>
     {% endif %}
-
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Log in</button>
-    </form>
-
-    <p class="muted" style="margin-bottom: 0;">
-      Need to join as a reviewer? <a href="{% url 'l10n_apply' %}">Apply here</a>.
-    </p>
   </div>
-
-  {% if user.is_authenticated %}
-    <p class="muted">You are already logged in as {{ user.get_username }}.</p>
-  {% endif %}
 {% endblock %}

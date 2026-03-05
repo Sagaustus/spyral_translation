@@ -3,27 +3,39 @@
 {% block title %}Review Queue — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>Review Queue</h2>
-
-  <div class="card">
-    <p style="margin: 0;">
-      Language: <strong>{{ locale.name }}</strong> ({{ locale.code }})
+  <div class="page-heading">
+    <h2>Review Queue</h2>
+    <p class="muted mb-0">
+      Language: <strong>{{ locale.name }}</strong> ({{ locale.code }}) &mdash; showing up to 200 items.
     </p>
   </div>
 
   {% if translations %}
-    <div class="card">
-      <ul>
+    <div class="card mt-0">
+      <ul class="review-list">
         {% for tr in translations %}
-          <li>
-            <a href="{% url 'l10n_review_detail' tr.id %}">{{ tr.string_unit.location }} :: {{ tr.string_unit.message_id }}</a>
+          <li class="review-item">
+            <div class="review-row">
+              <a class="review-link" href="{% url 'l10n_review_detail' tr.id %}">
+                {{ tr.string_unit.location }} :: {{ tr.string_unit.message_id }}
+              </a>
+              <span class="badge-group">
+                <span class="badge" data-status="{{ tr.status }}">{{ tr.get_status_display }}</span>
+                {% if tr.qa_flags %}
+                  <span class="badge badge-qa">QA: {{ tr.qa_flags|length }}</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="review-meta">
+              <strong>Source:</strong> {{ tr.string_unit.source_text|truncatechars:160 }}
+            </div>
           </li>
         {% endfor %}
       </ul>
     </div>
   {% else %}
-    <div class="card">
-      <p>No items to review right now.</p>
+    <div class="card mt-0">
+      <p class="mb-0 muted">No items to review right now. Check back after AI drafts are imported.</p>
     </div>
   {% endif %}
 {% endblock %}

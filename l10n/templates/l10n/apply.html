@@ -3,21 +3,24 @@
 {% block title %}Apply to be a Translator — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>Apply to be a Human-in-the-Loop Translator</h2>
+  <div style="max-width: 640px;">
+    <div class="page-heading">
+      <h2>Apply to be a Human-in-the-Loop Translator</h2>
+      <p class="muted mb-0">
+        Submit this form to request reviewer access for a specific interface language.
+        After submitting, you can log in and explore the site, but you will not be able to
+        review translations until a SuperAdmin approves your application.
+      </p>
+    </div>
 
-  <div class="card">
-    <p>
-      Submit this form to request reviewer access for a specific interface language.
-      After submitting, you can log in and explore the site, but you will not be able to review translations
-      until a SuperAdmin approves your application.
-    </p>
-  </div>
-
-  <div class="card">
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Submit application</button>
-    </form>
+    <div class="card mt-0">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Submit application</button>
+        </div>
+      </form>
+    </div>
   </div>
 {% endblock %}

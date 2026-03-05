@@ -3,28 +3,69 @@
 {% block title %}Review Translation — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>Review Translation</h2>
-
-  <div class="card">
-    <p><strong>Key:</strong> {{ tr.string_unit.location }} :: {{ tr.string_unit.message_id }}</p>
-    <p><strong>Source (English):</strong></p>
-    <pre>{{ tr.string_unit.source_text }}</pre>
-    <p><strong>AI draft:</strong></p>
-    <pre>{{ tr.machine_draft }}</pre>
+  <div class="page-heading">
+    <div class="action-strip">
+      <h2 style="margin: 0;">Review Translation</h2>
+      <a class="btn btn-small" href="{% url 'l10n_review' %}" data-shortcut-back>&#8592; Back to queue</a>
+    </div>
+    <div class="badge-group" style="margin-top: 10px;">
+      <span class="badge" data-status="{{ tr.status }}">{{ tr.get_status_display }}</span>
+      <span class="badge">{{ tr.locale.name }}</span>
+      {% if tr.qa_flags %}
+        <span class="badge badge-qa">&#9888; QA: {{ tr.qa_flags|length }} flag{{ tr.qa_flags|length|pluralize }}</span>
+      {% endif %}
+    </div>
   </div>
 
-  <div class="card">
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Save review</button>
-    </form>
+  <div class="grid cols-2">
+    <div class="card">
+      <p style="margin-bottom: 14px;">
+        <strong>Key:</strong>
+        <code style="word-break: break-all;">{{ tr.string_unit.location }} :: {{ tr.string_unit.message_id }}</code>
+      </p>
+      <div class="form-actions" style="margin-top: 0; margin-bottom: 6px;">
+        <button
+          class="btn btn-small"
+          type="button"
+          data-copy
+          data-copy-text="{{ tr.string_unit.location|escape }} :: {{ tr.string_unit.message_id|escape }}"
+        >Copy key</button>
+      </div>
+
+      <h3 style="margin-top: 20px;">Source (English)</h3>
+      <div class="form-actions" style="margin-top: 0; margin-bottom: 6px;">
+        <button class="btn btn-small" type="button" data-copy data-copy-target="#js-source-text">Copy source</button>
+      </div>
+      <pre id="js-source-text">{{ tr.string_unit.source_text }}</pre>
+
+      <h3>AI draft</h3>
+      <div class="form-actions" style="margin-top: 0; margin-bottom: 6px;">
+        <button class="btn btn-small" type="button" data-copy data-copy-target="#js-ai-draft">Copy AI draft</button>
+      </div>
+      <pre id="js-ai-draft">{{ tr.machine_draft }}</pre>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top: 0;">Your review</h3>
+      <p class="muted" style="font-size: 0.88rem; margin-bottom: 18px;">
+        Keyboard: <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Ctrl+Enter</kbd> to save &nbsp;&middot;&nbsp;
+        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Esc</kbd> to go back
+      </p>
+      <form method="post" class="js-dirty-check">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Save review</button>
+          <button class="btn btn-small" type="button" data-copy data-copy-from="#id_reviewer_text">Copy my text</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   {% if tr.qa_flags %}
-    <div class="card">
-      <p><strong>QA flags:</strong></p>
-      <pre>{{ tr.qa_flags }}</pre>
-    </div>
+    <details style="margin-top: 16px;">
+      <summary>QA flags ({{ tr.qa_flags|length }})</summary>
+      <pre style="margin-top: 14px;">{{ tr.qa_flags }}</pre>
+    </details>
   {% endif %}
 {% endblock %}
