@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 import sys
+import logging
 from pathlib import Path
 
 import dj_database_url
@@ -46,6 +47,15 @@ if os.environ.get("DYNO"):
     elif ".herokuapp.com" not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(".herokuapp.com")
 
+    # Some environments (or configs) may not provide HEROKU_APP_NAME; ensure we still
+    # allow the current app's hostname if it's passed explicitly.
+    heroku_hostname = os.environ.get("HEROKU_HOSTNAME", "").strip()
+    if heroku_hostname and heroku_hostname not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(heroku_hostname)
+
+    # Heroku is always behind a proxy.
+    USE_X_FORWARDED_HOST = True
+
 
 def _env_bool(name: str, default: bool = False) -> bool:
     return os.environ.get(name, "1" if default else "0").lower() in {"1", "true", "yes", "on"}
@@ -72,6 +82,33 @@ if os.environ.get("DYNO"):
     _csrf_trusted.append("https://*.herokuapp.com")
 
 CSRF_TRUSTED_ORIGINS = sorted(set(_csrf_trusted))
+
+
+# Logging: when DEBUG=False, Django returns a plain 400 for SuspiciousOperation
+# (e.g. DisallowedHost). These loggers ensure the underlying reason appears in
+# Heroku logs so we can fix it quickly.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "loggers": {
+        "django.security": {
+            "handlers": ["console"],
+            "level": os.environ.get("DJANGO_SECURITY_LOG_LEVEL", "WARNING"),
+        },
+        "django.security.DisallowedHost": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": os.environ.get("DJANGO_REQUEST_LOG_LEVEL", "WARNING"),
+        },
+    },
+}
 
 # Cookie security: default to secure cookies on Heroku, but keep local HTTP
 # workable unless you opt in.
