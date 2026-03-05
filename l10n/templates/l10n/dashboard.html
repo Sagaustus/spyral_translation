@@ -82,7 +82,7 @@
           </div>
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <a class="btn btn-small" href="{% url 'admin:l10n_translation_changelist' %}?locale__code__exact={{ s.locale.code }}">
+            <a class="btn btn-small" href="{% url 'admin:l10n_translation_changelist' %}?locale__id__exact={{ s.locale.id }}">
               Review in Admin
             </a>
             <a class="btn btn-small" href="{% url 'l10n_export_locale_csv' s.locale.code %}">
