@@ -29,7 +29,12 @@ def about(request: HttpRequest) -> HttpResponse:
 
 
 def team(request: HttpRequest) -> HttpResponse:
-    return render(request, "l10n/team.html")
+    approved = (
+        TranslatorApplication.objects.filter(status=TranslatorApplication.ApplicationStatus.APPROVED)
+        .select_related("user", "desired_locale")
+        .order_by("full_name")
+    )
+    return render(request, "l10n/team.html", {"approved_applications": approved})
 
 
 def call_translators(request: HttpRequest) -> HttpResponse:
@@ -40,7 +45,7 @@ def apply(request: HttpRequest) -> HttpResponse:
     _ensure_yoruba_locale()
 
     if request.method == "POST":
-        form = TranslatorApplicationForm(request.POST)
+        form = TranslatorApplicationForm(request.POST, request.FILES)
         if form.is_valid():
             application = form.save()
             login(request, application.user)

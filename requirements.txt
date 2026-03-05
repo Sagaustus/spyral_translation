@@ -5,3 +5,4 @@ dj-database-url
 gunicorn
 whitenoise
 pycountry
+Pillow

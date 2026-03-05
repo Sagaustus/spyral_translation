@@ -5,24 +5,59 @@
 
   <div class="card">
     <p>
-      This site supports a reproducible translation workflow for the Voyant Tools interface, with a focus on Yoruba.
-      It combines AI-assisted drafting with QA checks and human approval.
+      This site supports a reproducible localization workflow for the Voyant Tools interface across African languages.
+      It combines AI-assisted drafting, benchmark-driven evaluation, QA checks, and human-in-the-loop review.
     </p>
 
     {% if user.is_authenticated %}
       <p class="muted" style="margin-bottom: 0;">Signed in as {{ user.get_username }}.</p>
     {% else %}
-      <p class="muted" style="margin-bottom: 0;">
-        Not signed in. Team members can log in via the Admin page.
-      </p>
+      <p class="muted" style="margin-bottom: 0;">Not signed in.</p>
     {% endif %}
+  </div>
+
+  <h3>Join the project</h3>
+
+  <div class="card">
+    <h4 style="margin: 0 0 8px 0;">Translators</h4>
+    <p class="muted" style="margin: 0 0 10px 0;">
+      Provide language expertise and help translate UI strings into your African language(s).
+    </p>
+    <a class="btn" href="{% url 'l10n_apply' %}">Apply</a>
+  </div>
+
+  <div class="card">
+    <h4 style="margin: 0 0 8px 0;">Human-in-the-loop reviewers</h4>
+    <p class="muted" style="margin: 0 0 10px 0;">
+      Validate AI drafts, enforce placeholder/tag safety, and improve consistency.
+    </p>
+    <a class="btn" href="{% url 'l10n_apply' %}">Apply</a>
+  </div>
+
+  <div class="card">
+    <h4 style="margin: 0 0 8px 0;">Collaborators</h4>
+    <p class="muted" style="margin: 0 0 10px 0;">
+      Contribute datasets, glossaries, evaluation ideas, or model integration work.
+    </p>
+    <a class="btn" href="{% url 'l10n_call_translators' %}">Learn more</a>
+  </div>
+
+  <h3>Models and benchmarks</h3>
+  <div class="card">
+    <ul style="margin: 0;">
+      <li><strong>NLLB-200</strong> for multilingual machine translation drafts.</li>
+      <li><strong>XLM-R sentence embeddings</strong> (via sentence-transformers) for semantic similarity / back-translation checks.</li>
+      <li><strong>OpenAI</strong> (optional) for alternative draft generation and comparison.</li>
+      <li><strong>Ollama</strong> (optional) for local, pluggable LLM experimentation.</li>
+      <li><strong>AfroLingu-MT</strong> benchmark dataset for evaluating translation quality on African language pairs.</li>
+    </ul>
   </div>
 
   <h3>Quick links</h3>
   <ul>
     <li><a href="{% url 'l10n_about' %}">About the Project</a></li>
     <li><a href="{% url 'l10n_call_translators' %}">Call for Human-in-the-Loop Translators</a></li>
-    <li><a href="{% url 'l10n_team' %}">Team Members</a></li>
+    <li><a href="{% url 'l10n_team' %}">Current Team</a></li>
     <li><a href="{% url 'l10n_login' %}">Login</a></li>
   </ul>
 {% endblock %}

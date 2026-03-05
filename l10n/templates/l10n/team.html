@@ -1,9 +1,9 @@
 {% extends "l10n/base.html" %}
 
-{% block title %}Team Members — African Localization of Voyant Tools{% endblock %}
+{% block title %}Current Team — African Localization of Voyant Tools{% endblock %}
 
 {% block content %}
-  <h2>Team Members</h2>
+  <h2>Current Team</h2>
 
   <div class="card">
     <p>
@@ -15,6 +15,32 @@
       <a class="btn" href="{% url 'l10n_login' %}">Login</a>
     </p>
   </div>
+
+  {% if approved_applications %}
+    <h3>Approved members</h3>
+    {% for app in approved_applications %}
+      <div class="card">
+        <div style="display: flex; gap: 14px; align-items: flex-start;">
+          {% if app.photo %}
+            <img
+              src="{{ app.photo.url }}"
+              alt="{{ app.full_name }}"
+              style="width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;"
+            />
+          {% endif %}
+          <div>
+            <div><strong>{{ app.full_name }}</strong></div>
+            {% if app.affiliation %}<div class="muted">{{ app.affiliation }}</div>{% endif %}
+            <div class="muted">Language: {{ app.desired_locale.name }} ({{ app.desired_locale.code }})</div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="card">
+      <p style="margin: 0;">No approved team members yet.</p>
+    </div>
+  {% endif %}
 
   <p>
     Want to join the reviewer pool? See the

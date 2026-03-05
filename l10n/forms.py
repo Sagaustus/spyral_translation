@@ -74,6 +74,8 @@ class TranslatorApplicationForm(forms.Form):
     wants_acknowledgement = forms.BooleanField(required=False, initial=True)
     acknowledgement_name = forms.CharField(max_length=200, required=False)
 
+    photo = forms.ImageField(required=False)
+
     def clean_username(self):
         username = (self.cleaned_data.get("username") or "").strip()
         if not username:
@@ -125,6 +127,7 @@ class TranslatorApplicationForm(forms.Form):
             dialect=self.cleaned_data.get("dialect") or "",
             wants_acknowledgement=bool(self.cleaned_data.get("wants_acknowledgement")),
             acknowledgement_name=(self.cleaned_data.get("acknowledgement_name") or "").strip(),
+            photo=self.cleaned_data.get("photo"),
             status=TranslatorApplication.ApplicationStatus.PENDING,
         )
         return application

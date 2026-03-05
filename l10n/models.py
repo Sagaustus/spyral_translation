@@ -207,6 +207,8 @@ class TranslatorApplication(models.Model):
     wants_acknowledgement = models.BooleanField(default=True)
     acknowledgement_name = models.CharField(max_length=200, blank=True)
 
+    photo = models.ImageField(upload_to="team_photos/", blank=True, null=True)
+
     status = models.CharField(
         max_length=16,
         choices=ApplicationStatus.choices,
