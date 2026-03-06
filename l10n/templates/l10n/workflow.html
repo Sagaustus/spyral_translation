@@ -7,7 +7,7 @@
     <h2>AI-Assisted Translation Pipeline</h2>
     <p class="muted mb-0">
       A fully reproducible, seven-step workflow turning raw Voyant UI strings into
-      human-validated Yoruba translations — with provenance tracked at every stage.
+      human-validated translations for underrepresented languages — with provenance tracked at every stage.
     </p>
   </div>
 
@@ -64,7 +64,7 @@
         <span class="pipeline-step__icon">&#129302;</span>
         <div class="pipeline-step__title">Generate Machine Draft</div>
         <p class="pipeline-step__desc">
-          One or more translation engines produce a candidate Yoruba rendering.
+          One or more translation engines produce a candidate translation.
           NLLB-200 runs locally (no API key). OpenAI and Ollama are optional
           pluggable alternatives controlled via environment variables.
           Multiple drafts can be stored side-by-side for cross-model comparison.
@@ -81,13 +81,13 @@
         <span class="pipeline-step__icon">&#128260;</span>
         <div class="pipeline-step__title">Back-Translation</div>
         <p class="pipeline-step__desc">
-          The Yoruba draft is translated back to English using NLLB-200.
+          The draft is translated back to English using NLLB-200.
           This round-trip surface is later compared to the original English
           source to detect semantic drift — strings that "lost their meaning"
           in translation are flagged automatically.
         </p>
         <div class="pipeline-step__engines">
-          <span class="pipeline-step__engine-tag">NLLB-200 (yo→en)</span>
+          <span class="pipeline-step__engine-tag">NLLB-200 (target→en)</span>
           <span class="pipeline-step__engine-tag">back_translate()</span>
         </div>
       </div>
@@ -155,7 +155,7 @@
             <span class="model-card__tag model-card__tag--mt">Machine Translation</span>
             <div class="model-card__title">NLLB-200</div>
             <p class="muted mb-0 text-sm">
-              Meta AI's 200-language neural MT model. Primary engine for Yoruba drafts
+              Meta AI's 200-language neural MT model. Primary engine for translation drafts
               and back-translation. Runs locally — no API key required.
             </p>
           </div>
@@ -179,8 +179,8 @@
             <span class="model-card__tag model-card__tag--bench">Benchmark</span>
             <div class="model-card__title">AfroLingu-MT</div>
             <p class="muted mb-0 text-sm">
-              UBC-NLP's African language MT benchmark for evaluating quality on
-              African language pairs beyond Voyant strings.
+              UBC-NLP's multilingual MT benchmark for evaluating quality on
+              underrepresented language pairs beyond Voyant strings.
             </p>
           </div>
         </div>
@@ -228,7 +228,7 @@
       <div>
         <h4 style="margin-bottom: 4px;">Ready to help validate translations?</h4>
         <p class="muted mb-0 text-sm">
-          Native or fluent speakers of Yoruba and other African languages are welcome.
+          Native or fluent speakers of underrepresented languages are welcome.
         </p>
       </div>
       <div style="display: flex; gap: 10px; flex-shrink: 0;">
