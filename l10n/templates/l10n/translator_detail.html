@@ -33,26 +33,67 @@
           Engine: <code>{{ tr.engine }}</code>
         </p>
       {% endif %}
-      <pre>{{ tr.machine_draft }}</pre>
+      <pre id="js-ai-draft">{{ tr.machine_draft }}</pre>
 
       {% if tr.reviewer_text %}
         <h3>Reviewer notes</h3>
-        <pre>{{ tr.reviewer_text }}</pre>
+        <pre id="js-reviewer-text">{{ tr.reviewer_text }}</pre>
+        <p class="muted text-sm mb-0">
+          The reviewer rejected the AI draft. Please provide a corrected translation below.
+        </p>
       {% endif %}
     </div>
 
     <div class="card">
       <h3 style="margin-top: 0;">Your translation</h3>
-      <p class="muted text-sm" style="margin-bottom: 18px;">
-        Enter a corrected translation and submit it for final approval.
+      <p class="muted text-sm" style="margin-bottom: 12px;">
+        Correct the translation and submit for approval. You can start from the AI draft or reviewer text.
       </p>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+        <button class="btn btn-small" type="button" id="js-use-ai"
+                title="Start from the AI draft">Start from AI draft</button>
+        {% if tr.reviewer_text %}
+          <button class="btn btn-small" type="button" id="js-use-reviewer"
+                  title="Start from the reviewer's text">Start from reviewer text</button>
+        {% endif %}
+      </div>
+
       <form method="post" class="js-dirty-check">
         {% csrf_token %}
-        {{ form.as_p }}
+
+        <div style="margin-bottom: 14px;">
+          <label for="id_translator_text" style="font-weight: 600; display: block; margin-bottom: 6px;">
+            Corrected translation
+          </label>
+          <textarea id="id_translator_text" name="translator_text" rows="6"
+                    style="width: 100%; font-size: 1rem; padding: 10px; border: 2px solid var(--clr-border); border-radius: 6px; font-family: inherit;"
+                    placeholder="Enter your corrected translation here...">{{ form.instance.translator_text|default:"" }}</textarea>
+        </div>
+
         <div class="form-actions">
           <button class="btn btn-primary" type="submit">Submit for approval</button>
         </div>
       </form>
     </div>
   </div>
+
+  <script>
+  (function () {
+    var textArea = document.getElementById('id_translator_text');
+
+    function useText(sourceId) {
+      var el = document.getElementById(sourceId);
+      if (el) {
+        textArea.value = el.textContent;
+        textArea.focus();
+      }
+    }
+
+    document.getElementById('js-use-ai').addEventListener('click', function () { useText('js-ai-draft'); });
+
+    var btnReviewer = document.getElementById('js-use-reviewer');
+    if (btnReviewer) btnReviewer.addEventListener('click', function () { useText('js-reviewer-text'); });
+  })();
+  </script>
 {% endblock %}

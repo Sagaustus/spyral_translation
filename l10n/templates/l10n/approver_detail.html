@@ -28,31 +28,107 @@
       <pre>{{ tr.string_unit.source_text }}</pre>
 
       <h3>AI draft</h3>
-      <pre>{{ tr.machine_draft }}</pre>
+      <pre id="js-ai-draft">{{ tr.machine_draft }}</pre>
 
       {% if tr.reviewer_text %}
         <h3>Reviewer suggestion</h3>
-        <pre>{{ tr.reviewer_text }}</pre>
+        <pre id="js-reviewer-text">{{ tr.reviewer_text }}</pre>
       {% endif %}
 
       {% if tr.translator_text %}
         <h3>Translator suggestion</h3>
-        <pre>{{ tr.translator_text }}</pre>
+        <pre id="js-translator-text">{{ tr.translator_text }}</pre>
+      {% endif %}
+
+      {% if tr.back_translation %}
+        <h3>Back-translation (English)</h3>
+        {% if tr.similarity_score is not None %}
+          <p class="muted text-sm" style="margin-bottom: 6px;">
+            Semantic similarity:
+            <strong style="color: {% if tr.similarity_score >= 0.75 %}var(--clr-success){% elif tr.similarity_score >= 0.5 %}var(--clr-warning){% else %}var(--clr-danger){% endif %};">
+              {{ tr.similarity_score|floatformat:3 }}
+            </strong>
+          </p>
+        {% endif %}
+        <pre>{{ tr.back_translation }}</pre>
       {% endif %}
     </div>
 
     <div class="card">
       <h3 style="margin-top: 0;">Approved translation</h3>
-      <p class="muted text-sm" style="margin-bottom: 18px;">
-        This text is what exports will use.
+      <p class="muted text-sm" style="margin-bottom: 12px;">
+        This text is what exports will use. Pick a suggestion below or type your own.
       </p>
-      <form method="post" class="js-dirty-check">
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+        {% if tr.reviewer_text %}
+          <button class="btn btn-small" type="button" id="js-use-reviewer"
+                  title="Use the reviewer's suggestion">Use reviewer text</button>
+        {% endif %}
+        {% if tr.translator_text %}
+          <button class="btn btn-small" type="button" id="js-use-translator"
+                  title="Use the translator's suggestion">Use translator text</button>
+        {% endif %}
+        <button class="btn btn-small" type="button" id="js-use-ai"
+                title="Use the original AI draft">Use AI draft</button>
+      </div>
+
+      <form method="post" id="js-approve-form" class="js-dirty-check">
         {% csrf_token %}
-        {{ form.as_p }}
+
+        <div style="margin-bottom: 14px;">
+          <label for="id_approved_text" style="font-weight: 600; display: block; margin-bottom: 6px;">
+            Final translation
+          </label>
+          <textarea id="id_approved_text" name="approved_text" rows="6"
+                    style="width: 100%; font-size: 1rem; padding: 10px; border: 2px solid var(--clr-border); border-radius: 6px; font-family: inherit;"
+                    >{{ form.initial.approved_text|default:form.instance.approved_text|default:"" }}</textarea>
+        </div>
+
         <div class="form-actions">
           <button class="btn btn-primary" type="submit">Approve</button>
+          <a class="btn btn-small" href="{% url 'l10n_approve' %}">Cancel</a>
         </div>
       </form>
     </div>
   </div>
+
+  {% if tr.qa_flags %}
+    <details style="margin-top: 16px;" open>
+      <summary>QA flags ({{ tr.qa_flags|length }}) — review before approving</summary>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+        {% for flag in tr.qa_flags %}
+          <div class="alert {% if flag.code == 'low_similarity' %}alert--warning{% else %}alert--error{% endif %}">
+            <strong>{{ flag.code }}</strong> — {{ flag.message }}
+            {% if flag.details %}
+              <pre style="margin: 6px 0 0; font-size: 0.8rem; background: transparent; border: none; padding: 0;">{{ flag.details }}</pre>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </details>
+  {% endif %}
+
+  <script>
+  (function () {
+    var approvedText = document.getElementById('id_approved_text');
+
+    function useText(sourceId) {
+      var el = document.getElementById(sourceId);
+      if (el) {
+        approvedText.value = el.textContent;
+        approvedText.style.borderColor = 'var(--clr-success, #28a745)';
+        approvedText.focus();
+      }
+    }
+
+    var btnReviewer = document.getElementById('js-use-reviewer');
+    var btnTranslator = document.getElementById('js-use-translator');
+    var btnAi = document.getElementById('js-use-ai');
+
+    if (btnReviewer) btnReviewer.addEventListener('click', function () { useText('js-reviewer-text'); });
+    if (btnTranslator) btnTranslator.addEventListener('click', function () { useText('js-translator-text'); });
+    if (btnAi) btnAi.addEventListener('click', function () { useText('js-ai-draft'); });
+  })();
+  </script>
 {% endblock %}

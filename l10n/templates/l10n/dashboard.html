@@ -11,6 +11,39 @@
     </p>
   </div>
 
+  {% if pending_applications %}
+  <div class="section-label"><h3>Pending Applications ({{ pending_applications|length }})</h3></div>
+
+  <div class="card mt-0">
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="text-align: left; border-bottom: 2px solid #e0d6cc;">
+          <th style="padding: 8px 12px;">Name</th>
+          <th style="padding: 8px 12px;">Username</th>
+          <th style="padding: 8px 12px;">Locale</th>
+          <th style="padding: 8px 12px;">Affiliation</th>
+          <th style="padding: 8px 12px;">Applied</th>
+          <th style="padding: 8px 12px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in pending_applications %}
+        <tr style="border-bottom: 1px solid #eee;">
+          <td style="padding: 8px 12px;">{{ app.full_name }}</td>
+          <td style="padding: 8px 12px;">{{ app.user.username }}</td>
+          <td style="padding: 8px 12px;">{{ app.desired_locale.name }} ({{ app.desired_locale.code }})</td>
+          <td style="padding: 8px 12px;">{{ app.affiliation|default:"—" }}</td>
+          <td style="padding: 8px 12px;">{{ app.created_at|date:"M d, Y" }}</td>
+          <td style="padding: 8px 12px;">
+            <a class="btn btn-small btn-primary" href="{% url 'admin:l10n_translatorapplication_change' app.pk %}">Review</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
   <div class="section-label"><h3>Pipeline</h3></div>
 
   <div class="card mt-0" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">

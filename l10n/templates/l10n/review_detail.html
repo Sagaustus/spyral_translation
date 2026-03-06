@@ -69,29 +69,61 @@
 
     <div class="card">
       <h3 style="margin-top: 0;">Your review</h3>
-      <p class="muted text-sm" style="margin-bottom: 18px;">
-        Keyboard:
-        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Ctrl+Enter</kbd>
-        to save &nbsp;&middot;&nbsp;
-        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Esc</kbd>
-        to go back
+      <p class="muted text-sm" style="margin-bottom: 12px;">
+        Review the AI draft on the left. You can accept it as-is, edit specific words, or reject it entirely.
       </p>
-      <form method="post" class="js-dirty-check">
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+        <button class="btn btn-primary" type="button" id="js-accept-draft"
+                title="Copy the AI draft into the text box and set status to Approve">
+          Accept AI Draft
+        </button>
+        <button class="btn" type="button" id="js-reject-draft" style="background: var(--clr-danger); color: #fff;"
+                title="Set status to Disapprove and send to translator">
+          Reject
+        </button>
+        <button class="btn btn-small" type="button" id="js-flag-draft"
+                title="Flag for attention (dialect or cultural questions)">
+          Flag for attention
+        </button>
+      </div>
+
+      <form method="post" id="js-review-form" class="js-dirty-check">
         {% csrf_token %}
-        {{ form.as_p }}
+
+        <div style="margin-bottom: 14px;">
+          <label for="id_reviewer_text" style="font-weight: 600; display: block; margin-bottom: 6px;">
+            Translation text
+            <span class="muted text-sm" style="font-weight: normal;">&mdash; edit to correct specific words</span>
+          </label>
+          <textarea id="id_reviewer_text" name="reviewer_text" rows="6"
+                    style="width: 100%; font-size: 1rem; padding: 10px; border: 2px solid var(--clr-border); border-radius: 6px; font-family: inherit;"
+                    placeholder="Click 'Accept AI Draft' to pre-fill, or type your corrected translation here...">{{ form.initial.reviewer_text|default:form.instance.reviewer_text|default:"" }}</textarea>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label for="id_status" style="font-weight: 600; display: block; margin-bottom: 6px;">Decision</label>
+          <select id="id_status" name="status"
+                  style="width: 100%; padding: 8px 10px; font-size: 1rem; border: 2px solid var(--clr-border); border-radius: 6px;">
+            {% for value, label in form.fields.status.choices %}
+              <option value="{{ value }}" {% if form.instance.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
         <div class="form-actions">
           <button class="btn btn-primary" type="submit">Save review</button>
           <button class="btn btn-small" type="button" data-copy data-copy-from="#id_reviewer_text">Copy my text</button>
         </div>
       </form>
 
-      <div class="section-label" style="margin-top: 28px;"><h3>Review guide</h3></div>
-      <ul class="muted text-sm" style="margin-top: 0; line-height: 1.7;">
-        <li><strong>Accept:</strong> Copy the AI draft into the box above, set status to <em>Approve (send to approver)</em>.</li>
-        <li><strong>Edit:</strong> Fix terminology or placeholder placement, then send to approver.</li>
-        <li><strong>Reject:</strong> Set status to <em>Disapprove (send to translator)</em> if the draft is unusable.</li>
-        <li><strong>Flag:</strong> Use <em>Flagged</em> to escalate dialect or cultural questions.</li>
-      </ul>
+      <p class="muted text-sm" style="margin-top: 14px; margin-bottom: 0;">
+        Keyboard:
+        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Ctrl+Enter</kbd>
+        to save &nbsp;&middot;&nbsp;
+        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Esc</kbd>
+        to go back
+      </p>
     </div>
   </div>
 
@@ -110,4 +142,44 @@
       </div>
     </details>
   {% endif %}
+
+  <script>
+  (function () {
+    var aiDraftEl = document.getElementById('js-ai-draft');
+    var textArea = document.getElementById('id_reviewer_text');
+    var statusSel = document.getElementById('id_status');
+    var form = document.getElementById('js-review-form');
+
+    var aiDraft = aiDraftEl ? aiDraftEl.textContent : '';
+
+    // Accept AI Draft: copy machine draft into textarea, set status to approve
+    document.getElementById('js-accept-draft').addEventListener('click', function () {
+      textArea.value = aiDraft;
+      statusSel.value = 'IN_REVIEW';
+      textArea.style.borderColor = 'var(--clr-success, #28a745)';
+      textArea.focus();
+    });
+
+    // Reject: clear text, set status to rejected
+    document.getElementById('js-reject-draft').addEventListener('click', function () {
+      if (!confirm('Reject this AI translation and send it to a translator for correction?')) return;
+      statusSel.value = 'REJECTED';
+      if (!textArea.value.trim()) {
+        textArea.value = '';
+      }
+      textArea.style.borderColor = 'var(--clr-danger, #dc3545)';
+      form.submit();
+    });
+
+    // Flag for attention
+    document.getElementById('js-flag-draft').addEventListener('click', function () {
+      statusSel.value = 'FLAGGED';
+      textArea.style.borderColor = 'var(--clr-warning, #ffc107)';
+      textArea.focus();
+      if (!textArea.value.trim()) {
+        textArea.placeholder = 'Please describe the issue (dialect concern, cultural question, etc.)...';
+      }
+    });
+  })();
+  </script>
 {% endblock %}

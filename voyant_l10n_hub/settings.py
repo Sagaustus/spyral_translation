@@ -257,6 +257,10 @@ else:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+LOGIN_URL = "l10n_login"
+LOGIN_REDIRECT_URL = "l10n_home"
+LOGOUT_REDIRECT_URL = "l10n_home"
+
 # ── Translation Pipeline ───────────────────────────────────────────────────
 # Engine choices: "nllb" (local, no key), "openai", "ollama"
 TRANSLATION_ENGINE = os.environ.get("TRANSLATION_ENGINE", "nllb")

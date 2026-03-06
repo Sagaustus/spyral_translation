@@ -435,6 +435,10 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             }
         )
 
+    pending_applications = TranslatorApplication.objects.filter(
+        status=TranslatorApplication.ApplicationStatus.PENDING,
+    ).select_related("user", "desired_locale").order_by("-created_at")
+
     return render(
         request,
         "l10n/dashboard.html",
@@ -442,6 +446,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "total_strings": total_strings,
             "locale_stats": locale_stats,
             "locale_count": len(locale_stats),
+            "pending_applications": pending_applications,
         },
     )
 
