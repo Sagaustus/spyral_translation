@@ -1,20 +1,20 @@
 {% extends "l10n/base.html" %}
 
-{% block title %}About the Project — African Localization of Voyant Tools{% endblock %}
+{% block title %}About the Project — Voyant Tools Localization Hub{% endblock %}
 
 {% block content %}
   <div class="page-heading">
     <h2>About the Project</h2>
     <p class="muted mb-0">
-      An AI-driven, fully reproducible methodology for translating the Voyant Tools interface
-      into African languages — starting with Yoruba.
+      An AI-driven, reproducible workflow for translating digital humanities tools
+      for underrepresented languages — starting with Yoruba.
     </p>
   </div>
 
   <div class="hero-banner hero-banner--sm">
-    <h2 class="hero-banner__title--sm">Language justice in digital humanities</h2>
+    <h2 class="hero-banner__title--sm">Language inclusivity in digital humanities</h2>
     <p class="hero-sub">
-      While Voyant Tools supports Arabic, French, German, Japanese, Spanish and many more, African languages
+      While Voyant Tools supports Arabic, French, German, Japanese, Spanish and many more, underrepresented languages
       have remained excluded — not for lack of scholarly need, but for lack of scalable, reproducible localisation
       frameworks. This project changes that.
     </p>
@@ -31,8 +31,8 @@
       <div class="feature-icon" aria-hidden="true">&#128683;</div>
       <h4>Limited NLP resources</h4>
       <p class="muted mb-0">
-        African languages lack the parallel corpora, pre-trained models, and evaluation benchmarks
-        that European and Asian languages enjoy.
+        Underrepresented languages lack the parallel corpora, pre-trained models, and evaluation benchmarks
+        that widely-resourced languages enjoy.
       </p>
     </div>
     <div class="card mt-0">
@@ -40,14 +40,14 @@
       <h4>No localisation framework</h4>
       <p class="muted mb-0">
         Community-based efforts are not scalable. There was no transparent, open, replicable workflow
-        for DH software localisation into African languages.
+        for DH software localisation into underrepresented languages.
       </p>
     </div>
     <div class="card mt-0">
       <div class="feature-icon" aria-hidden="true">&#9878;&#65039;</div>
       <h4>Exclusion from DH tools</h4>
       <p class="muted mb-0">
-        Voyant Tools — widely used for text analysis in DH — had no African language interface,
+        Voyant Tools — widely used for text analysis in DH — lacked interfaces for many languages,
         excluding millions of speakers from a major research tool.
       </p>
     </div>
@@ -73,7 +73,7 @@
       <p class="muted">
         Every step is implemented in open Python — no proprietary tooling, no locked-in services.
         The workflow, scripts, and datasets are shared publicly so any DH scholar can replicate or
-        extend it for Amharic, Swahili, isiZulu, or any other African language.
+        extend it for any underrepresented language supported by NLLB-200.
       </p>
       <p class="mb-0 muted text-sm">
         Implemented in a Jupyter Notebook environment, requiring only an internet connection
@@ -89,7 +89,7 @@
       <span class="model-card__tag model-card__tag--mt">Machine Translation</span>
       <h4 class="model-card__title">NLLB-200</h4>
       <p class="muted mb-0 text-sm">
-        Meta AI’s 200-language model. Primary engine for Yoruba drafts.
+        Meta AI's 200-language model. Primary engine for translation drafts.
         Runs locally; no API key required.
       </p>
     </div>
@@ -113,8 +113,8 @@
       <span class="model-card__tag model-card__tag--bench">Benchmark</span>
       <h4 class="model-card__title">AfroLingu-MT</h4>
       <p class="muted mb-0 text-sm">
-        UBC-NLP’s African language MT benchmark dataset, used for evaluating translation
-        quality on African language pairs beyond Voyant strings.
+        UBC-NLP's multilingual MT benchmark dataset, used for evaluating translation
+        quality on underrepresented language pairs beyond Voyant strings.
       </p>
     </div>
   </div>
@@ -124,15 +124,14 @@
   <div class="card mt-0">
     <p>
       Even when full NLP analysis for a language is not yet available inside Voyant, multilingual interface
-      “skins” are a meaningful first step. A scholar working in Yoruba should be able to navigate the
+      "skins" are a meaningful first step. A scholar working in Yoruba should be able to navigate the
       tool in their own language — this reduces the cognitive overhead of digital humanities work and
       sends a clear signal that these languages belong in scholarly infrastructure.
     </p>
     <p class="mb-0">
       This project is a <strong>template</strong>. The same pipeline can be pointed at any Voyant-supported
       export CSV and any target language supported by NLLB-200 or the chosen LLM.
-      We invite scholars, students, and community members to extend it to <em>Amharic</em>, <em>Swahili</em>,
-      <em>isiZulu</em>, and beyond.
+      We invite scholars, students, and community members to extend it to any underrepresented language.
     </p>
   </div>
 
@@ -143,7 +142,7 @@
       <li>Introduce the general problem of translating digital humanities resources.</li>
       <li>Describe how Voyant handles different language interfaces and the challenge of adding new ones.</li>
       <li>Walk through the AI-assisted workflow with its human-in-the-loop validation phase.</li>
-      <li>Discuss specialised language models for African languages (NLLB-200, AfroLingu-MT).</li>
+      <li>Discuss specialised language models for underrepresented languages (NLLB-200, AfroLingu-MT).</li>
       <li>Call for more translated DH tools and low-resource language utilities.</li>
     </ol>
   </div>
@@ -154,7 +153,7 @@
     <div class="card">
       <h4>More languages</h4>
       <p class="muted mb-0 text-sm">
-        Expand beyond Yoruba to Hausa, Igbo, Swahili, Amharic, isiZulu — using the same pipeline.
+        Expand beyond Yoruba to Hausa, Igbo, Swahili, Amharic, isiZulu, and more — using the same pipeline.
       </p>
     </div>
     <div class="card">
@@ -166,8 +165,8 @@
     <div class="card">
       <h4>Deeper NLP support</h4>
       <p class="muted mb-0 text-sm">
-        Work towards enabling Voyant’s <em>analysis</em> capabilities — not just the interface — for
-        African language texts.
+        Work towards enabling Voyant's <em>analysis</em> capabilities — not just the interface — for
+        underrepresented language texts.
       </p>
     </div>
   </div>
