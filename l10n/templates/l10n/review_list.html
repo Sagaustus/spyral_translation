@@ -10,6 +10,26 @@
     </p>
   </div>
 
+  {% if locales %}
+  <div class="card mt-0">
+    <form method="get" class="form-row" style="display: flex; gap: 12px; align-items: end; flex-wrap: wrap;">
+      <div style="min-width: 240px;">
+        <label for="id_locale">Locale</label>
+        <select id="id_locale" name="locale">
+          {% for loc in locales %}
+            <option value="{{ loc.code }}" {% if locale and loc.id == locale.id %}selected{% endif %}>
+              {{ loc.name }} ({{ loc.code }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <button class="btn btn-small" type="submit">Change</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
   {% if translations %}
     <div class="card mt-0">
       <ul class="review-list">

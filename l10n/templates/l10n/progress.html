@@ -4,13 +4,13 @@
 
 {% block content %}
   <div class="page-heading">
-    <h2>Translation Progress</h2>
+    <h2>Translation Progress &amp; Review Dashboard</h2>
     <p class="muted mb-0">
-      Live per-language progress across all enabled locales. Each bar reflects
-      the proportion of strings that have passed human review and been approved.
+      Live per-language status. Reviewers: click <strong>Review</strong> on any language to start validating AI drafts.
     </p>
   </div>
 
+  {# ── Summary stat cards ─────────────────────────────────────────────── #}
   <div class="stat-row" data-reveal>
     <div class="stat-card">
       <span class="stat-card__number">{{ total_strings }}</span>
@@ -20,89 +20,153 @@
       <span class="stat-card__number">{{ locale_stats|length }}</span>
       <span class="stat-card__label">Active locales</span>
     </div>
-    {% for s in locale_stats %}
-      {% if s.pct >= 100 %}
-        <div class="stat-card stat-card--success">
-          <span class="stat-card__number">{{ s.locale.code }}</span>
-          <span class="stat-card__label">Complete &#10003;</span>
-        </div>
-      {% endif %}
-    {% endfor %}
+    <div class="stat-card stat-card--success">
+      <span class="stat-card__number">{{ total_approved }}</span>
+      <span class="stat-card__label">Approved</span>
+    </div>
+    <div class="stat-card stat-card--warning">
+      <span class="stat-card__number">{{ total_needs_review }}</span>
+      <span class="stat-card__label">Awaiting review</span>
+    </div>
   </div>
 
+  {# ── Per-locale table ───────────────────────────────────────────────── #}
   <div class="section-label"><h3>By language</h3></div>
 
   {% if locale_stats %}
-    <div class="locale-progress-grid">
-      {% for s in locale_stats %}
-        <div class="locale-card" data-reveal>
-          <div class="locale-card-header">
-            <div class="locale-card-meta">
-              <div class="locale-name">{{ s.locale.name }}</div>
-              <span class="locale-code">{{ s.locale.code }}</span>
-            </div>
-            <div class="locale-pct">{{ s.pct }}%</div>
-          </div>
+  <div class="card mt-0" style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; min-width: 680px;">
+      <thead>
+        <tr style="text-align: left; border-bottom: 2px solid var(--clr-border);">
+          <th style="padding: 10px 12px;">Language</th>
+          <th style="padding: 10px 12px; text-align: center;">Approved</th>
+          <th style="padding: 10px 12px; text-align: center;">Awaiting Review</th>
+          <th style="padding: 10px 12px; text-align: center;">In Review</th>
+          <th style="padding: 10px 12px; text-align: center;">QA Flags</th>
+          <th style="padding: 10px 12px; text-align: center;">Progress</th>
+          <th style="padding: 10px 12px; text-align: center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in locale_stats %}
+        <tr style="border-bottom: 1px solid var(--clr-border);">
 
-          <div class="progress-bar-wrap">
-            <div class="progress-bar-fill" data-width="{{ s.pct }}"></div>
-          </div>
+          {# Language name + code #}
+          <td style="padding: 10px 12px;">
+            <div style="font-weight: 600;">{{ s.locale.name }}</div>
+            <span class="locale-code">{{ s.locale.code }}</span>
+          </td>
 
-          <div class="locale-stat-row">
-            <div class="locale-stat">
-              <strong>{{ s.approved }}</strong> approved
-            </div>
-            <div class="locale-stat">
-              <strong>{{ s.in_review }}</strong> in review
-            </div>
-            <div class="locale-stat">
-              <strong>{{ s.machine_draft }}</strong> draft
-            </div>
-            {% if s.qa_warnings %}
-              <div class="locale-stat">
-                <strong style="color: var(--clr-warning);">{{ s.qa_warnings }}</strong>
-                <span style="color: var(--clr-warning);">QA flags</span>
-              </div>
+          {# Approved #}
+          <td style="padding: 10px 12px; text-align: center;">
+            {% if s.approved %}
+              <span style="color: var(--clr-success); font-weight: 600;">{{ s.approved }}</span>
+            {% else %}
+              <span class="muted">0</span>
             {% endif %}
-          </div>
-        </div>
-      {% endfor %}
-    </div>
+          </td>
+
+          {# Awaiting review (machine draft) #}
+          <td style="padding: 10px 12px; text-align: center;">
+            {% if s.machine_draft %}
+              <span style="color: var(--clr-warning); font-weight: 600;">{{ s.machine_draft }}</span>
+            {% else %}
+              <span class="muted">0</span>
+            {% endif %}
+          </td>
+
+          {# In review #}
+          <td style="padding: 10px 12px; text-align: center;">
+            {% if s.in_review %}
+              <span style="font-weight: 600;">{{ s.in_review }}</span>
+            {% else %}
+              <span class="muted">0</span>
+            {% endif %}
+          </td>
+
+          {# QA flags #}
+          <td style="padding: 10px 12px; text-align: center;">
+            {% if s.qa_warnings %}
+              <span style="color: var(--clr-danger); font-weight: 600;">&#9888; {{ s.qa_warnings }}</span>
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </td>
+
+          {# Progress bar #}
+          <td style="padding: 10px 12px; min-width: 130px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex: 1; background: var(--clr-surface-2); border-radius: 4px; height: 8px; overflow: hidden;">
+                <div style="width: {{ s.pct }}%; background: var(--clr-success); height: 100%; border-radius: 4px;"></div>
+              </div>
+              <span class="muted text-sm" style="white-space: nowrap; min-width: 38px; text-align: right;">{{ s.pct }}%</span>
+            </div>
+          </td>
+
+          {# Action button #}
+          <td style="padding: 10px 12px; text-align: center;">
+            {% if user.is_authenticated %}
+              {% if s.machine_draft %}
+                <a class="btn btn-small btn-primary"
+                   href="{% url 'l10n_review' %}?locale={{ s.locale.code }}">
+                  Review ({{ s.machine_draft }})
+                </a>
+              {% elif s.approved == total_strings %}
+                <span class="badge" data-status="approved">Complete</span>
+              {% else %}
+                <span class="muted text-sm">No drafts</span>
+              {% endif %}
+            {% else %}
+              <a class="btn btn-small" href="{% url 'l10n_login' %}">Login to review</a>
+            {% endif %}
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
   {% else %}
-    <div class="card">
-      <p class="mb-0 muted">
-        No locales are enabled yet. Once strings are imported and locales configured,
-        progress will appear here.
-      </p>
-    </div>
+  <div class="card">
+    <p class="mb-0 muted">
+      No locales are enabled yet. Once strings are imported and locales configured,
+      progress will appear here.
+    </p>
+  </div>
   {% endif %}
 
-  <div class="section-label"><h3>How strings are counted</h3></div>
+  {# ── Legend ─────────────────────────────────────────────────────────── #}
+  <div class="section-label"><h3>What the columns mean</h3></div>
 
-  <div class="grid cols-3">
+  <div class="grid cols-4">
     <div class="card" data-reveal>
-      <h4>Approved</h4>
+      <h4 style="color: var(--clr-success);">Approved</h4>
       <p class="muted mb-0 text-sm">
-        Human reviewers have accepted the AI draft (or edited it) and marked it
-        as ready for export. These strings drive the completion percentage.
+        Human-validated strings, export-ready. Drives the % progress bar.
       </p>
     </div>
     <div class="card" data-reveal data-reveal-delay="2">
-      <h4>In review</h4>
+      <h4 style="color: var(--clr-warning);">Awaiting Review</h4>
       <p class="muted mb-0 text-sm">
-        A reviewer has opened the string and is currently working on it.
-        Temporarily locked from other reviewers.
+        AI draft exists but no human has reviewed it yet. Click <em>Review</em> to start.
       </p>
     </div>
     <div class="card" data-reveal data-reveal-delay="3">
-      <h4>Machine draft</h4>
+      <h4>In Review</h4>
       <p class="muted mb-0 text-sm">
-        AI translation generated but not yet touched by a human reviewer.
-        May include QA flags if automated checks detected issues.
+        A reviewer has submitted text and it is waiting for final approver sign-off.
+      </p>
+    </div>
+    <div class="card" data-reveal data-reveal-delay="4">
+      <h4 style="color: var(--clr-danger);">QA Flags</h4>
+      <p class="muted mb-0 text-sm">
+        Automated checks flagged issues: low similarity, missing placeholders, length ratio.
       </p>
     </div>
   </div>
 
+  {# ── CTA ────────────────────────────────────────────────────────────── #}
   <div class="card mt-0" style="margin-top: 16px;" data-reveal>
     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
       <div>

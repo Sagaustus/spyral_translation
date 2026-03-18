@@ -95,28 +95,31 @@
             <div class="progress-bar-fill" data-width="{{ s.pct }}"></div>
           </div>
 
-          <div class="stat-row" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 8px; margin-bottom: 12px;">
+          <div class="stat-row" style="grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); gap: 8px; margin-bottom: 12px;">
             <div class="stat-card" style="padding: 12px 10px;">
               <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.approved }}</span>
               <span class="stat-card__label">Approved</span>
             </div>
             <div class="stat-card stat-card--warning" style="padding: 12px 10px;">
-              <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.missing }}</span>
-              <span class="stat-card__label">Missing</span>
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.in_review }}</span>
+              <span class="stat-card__label">To review</span>
             </div>
             <div class="stat-card stat-card--danger" style="padding: 12px 10px;">
               <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.qa_warnings }}</span>
               <span class="stat-card__label">QA flags</span>
             </div>
             <div class="stat-card" style="padding: 12px 10px;">
-              <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.stale }}</span>
-              <span class="stat-card__label">Stale</span>
+              <span class="stat-card__number" style="font-size: 1.4rem;">{{ s.missing }}</span>
+              <span class="stat-card__label">Missing</span>
             </div>
           </div>
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <a class="btn btn-small" href="{% url 'admin:l10n_translation_changelist' %}?locale__id__exact={{ s.locale.id }}">
-              Review in Admin
+            <a class="btn btn-small btn-primary" href="{% url 'l10n_review' %}?locale={{ s.locale.code }}">
+              Review queue
+            </a>
+            <a class="btn btn-small" href="{% url 'l10n_approve' %}?locale={{ s.locale.code }}">
+              Approver queue
             </a>
             <a class="btn btn-small" href="{% url 'l10n_export_locale_csv' s.locale.code %}">
               Export CSV

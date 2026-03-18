@@ -39,19 +39,46 @@ NLLB_LANG: dict[str, str] = {
     "rw": "kin_Latn",
     "sn": "sna_Latn",
     "ti": "tir_Ethi",
-    # European/Asian (Voyant already supports these, but useful for back-translation)
+    # South Asian languages
+    "as": "asm_Beng",
+    "bn": "ben_Beng",
+    "gu": "guj_Gujr",
+    "hi": "hin_Deva",
+    "kn": "kan_Knda",
+    "ml": "mal_Mlym",
+    "mr": "mar_Deva",
+    "or": "ory_Orya",
+    "pa": "pan_Guru",
+    "ta": "tam_Taml",
+    "te": "tel_Telu",
+    "ur": "urd_Arab",
+    # Middle Eastern
+    "ar": "arb_Arab",
+    "fa": "pes_Arab",
+    "he": "heb_Hebr",
+    # East Asian
+    "zh-hans": "zho_Hans",
+    "zh-hant": "zho_Hant",
+    "ja": "jpn_Jpan",
+    # European languages
     "en": "eng_Latn",
     "fr": "fra_Latn",
     "de": "deu_Latn",
     "es": "spa_Latn",
     "pt": "por_Latn",
     "it": "ita_Latn",
-    "ar": "arb_Arab",
-    "hi": "hin_Deva",
-    "zh-hans": "zho_Hans",
-    "zh-hant": "zho_Hant",
     "cs": "ces_Latn",
-    "ja": "jpn_Jpan",
+    "bs": "bos_Latn",
+    "hr": "hrv_Latn",
+    "sr": "srp_Cyrl",
+    "sl": "slv_Latn",
+    "ro": "ron_Latn",
+    "el": "ell_Grek",
+    "sv": "swe_Latn",
+    "ru": "rus_Cyrl",
+    "tr": "tur_Latn",
+    # Tibetan
+    "bo": "bod_Tibt",
 }
 
 

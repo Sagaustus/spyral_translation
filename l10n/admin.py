@@ -79,17 +79,11 @@ def approve_applicants(_modeladmin, request, queryset):
         messages.error(request, "You do not have permission to approve applicants.")
         return
 
-    reviewer_group, _ = Group.objects.get_or_create(name="L10N_REVIEWER")
-    translator_group, _ = Group.objects.get_or_create(name="L10N_TRANSLATOR")
-
     updated = 0
     for app in queryset.select_related("user", "desired_locale"):
         app.status = TranslatorApplication.ApplicationStatus.APPROVED
         app.save(update_fields=["status", "updated_at"])
-
-        reviewer_group.user_set.add(app.user)
-        translator_group.user_set.add(app.user)
-        LocaleAssignment.objects.get_or_create(user=app.user, locale=app.desired_locale)
+        _assign_reviewer(app)
         updated += 1
 
     messages.success(request, f"Approved {updated} applicant(s).")
@@ -104,6 +98,14 @@ def reject_applicants(_modeladmin, request, queryset):
     messages.success(request, f"Rejected {updated} applicant(s).")
 
 
+def _assign_reviewer(app) -> None:
+    """Grant L10N_REVIEWER + L10N_TRANSLATOR groups and a LocaleAssignment when approved."""
+    reviewer_group, _ = Group.objects.get_or_create(name="L10N_REVIEWER")
+    translator_group, _ = Group.objects.get_or_create(name="L10N_TRANSLATOR")
+    app.user.groups.add(reviewer_group, translator_group)
+    LocaleAssignment.objects.get_or_create(user=app.user, locale=app.desired_locale)
+
+
 @admin.register(TranslatorApplication)
 class TranslatorApplicationAdmin(admin.ModelAdmin):
     list_display = ("full_name", "user", "desired_locale", "status", "created_at")
@@ -112,6 +114,29 @@ class TranslatorApplicationAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     autocomplete_fields = ("desired_locale", "user")
     actions = (approve_applicants, reject_applicants)
+
+    def save_model(self, request, obj, form, change):
+        """Auto-assign groups and locale when status is set to APPROVED via the change form."""
+        previous_status = None
+        if change and obj.pk:
+            try:
+                previous_status = TranslatorApplication.objects.values_list(
+                    "status", flat=True
+                ).get(pk=obj.pk)
+            except TranslatorApplication.DoesNotExist:
+                pass
+
+        super().save_model(request, obj, form, change)
+
+        if (
+            obj.status == TranslatorApplication.ApplicationStatus.APPROVED
+            and previous_status != TranslatorApplication.ApplicationStatus.APPROVED
+        ):
+            _assign_reviewer(obj)
+            messages.success(
+                request,
+                f"{obj.full_name} approved — added to reviewer groups and assigned to {obj.desired_locale.name}.",
+            )
 
 
 def _is_in_group(user, group_name: str) -> bool:

@@ -49,6 +49,8 @@ def progress(request: HttpRequest) -> HttpResponse:
     total_strings = StringUnit.objects.count()
 
     locale_stats = []
+    total_approved = 0
+    total_needs_review = 0
     for locale in locales:
         approved = (
             Translation.objects.filter(locale=locale, approved_text__isnull=False)
@@ -63,6 +65,10 @@ def progress(request: HttpRequest) -> HttpResponse:
         ).count()
         qa_warnings = Translation.objects.filter(locale=locale).exclude(qa_flags=[]).count()
         pct = round((approved / total_strings * 100) if total_strings else 0, 1)
+        draft_pct = round(((approved + machine_draft + in_review) / total_strings * 100) if total_strings else 0, 1)
+
+        total_approved += approved
+        total_needs_review += machine_draft
 
         locale_stats.append(
             {
@@ -73,13 +79,20 @@ def progress(request: HttpRequest) -> HttpResponse:
                 "qa_warnings": qa_warnings,
                 "total": total_strings,
                 "pct": pct,
+                "draft_pct": draft_pct,
+                "missing": max(total_strings - approved - machine_draft - in_review, 0),
             }
         )
 
     return render(
         request,
         "l10n/progress.html",
-        {"locale_stats": locale_stats, "total_strings": total_strings},
+        {
+            "locale_stats": locale_stats,
+            "total_strings": total_strings,
+            "total_approved": total_approved,
+            "total_needs_review": total_needs_review,
+        },
     )
 
 
@@ -122,9 +135,17 @@ def application_status(request: HttpRequest) -> HttpResponse:
     return render(request, "l10n/application_status.html", {"application": application})
 
 
+def _is_superadmin(user) -> bool:
+    if not user.is_authenticated:
+        return False
+    return getattr(user, "is_superuser", False)
+
+
 def _is_approved_reviewer(user) -> bool:
     if not user.is_authenticated:
         return False
+    if _is_superadmin(user):
+        return True
     try:
         app = user.translator_application
     except Exception:
@@ -137,6 +158,8 @@ def _is_approved_reviewer(user) -> bool:
 def _is_approved_translator(user) -> bool:
     if not user.is_authenticated:
         return False
+    if _is_superadmin(user):
+        return True
     try:
         app = user.translator_application
     except Exception:
@@ -149,9 +172,30 @@ def _is_approved_translator(user) -> bool:
 def _is_approver(user) -> bool:
     if not user.is_authenticated:
         return False
-    if getattr(user, "is_superuser", False):
+    if _is_superadmin(user):
         return True
     return user.groups.filter(name__in=["L10N_APPROVER", "L10N_SUPERADMIN"]).exists()
+
+
+def _get_user_locale(user, request=None):
+    """Return the locale for the user, or None.
+
+    Superadmins without an application can pick a locale via ?locale= query param.
+    """
+    # Try application locale first
+    try:
+        app = user.translator_application
+        return app.desired_locale
+    except Exception:
+        pass
+    # Superadmins can pick any enabled locale
+    if _is_superadmin(user) and request:
+        locale_code = (request.GET.get("locale") or "").strip().lower()
+        if locale_code:
+            return Locale.objects.filter(code=locale_code, enabled=True).first()
+        # Fall back to first enabled locale
+        return Locale.objects.filter(enabled=True).order_by("name").first()
+    return None
 
 
 @login_required
@@ -159,12 +203,16 @@ def review_queue(request: HttpRequest) -> HttpResponse:
     if not _is_approved_reviewer(request.user):
         return redirect("l10n_application")
 
-    app = request.user.translator_application
-    locale = app.desired_locale
-
-    # Only allow review if a superadmin has assigned the locale.
-    if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
+    locale = _get_user_locale(request.user, request)
+    if not locale:
         return redirect("l10n_application")
+
+    # Non-superadmins need a locale assignment.
+    if not _is_superadmin(request.user):
+        if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
+            return redirect("l10n_application")
+
+    locales = Locale.objects.filter(enabled=True).order_by("name") if _is_superadmin(request.user) else None
 
     translations = (
         Translation.objects.filter(locale=locale)
@@ -180,7 +228,7 @@ def review_queue(request: HttpRequest) -> HttpResponse:
     return render(
         request,
         "l10n/review_list.html",
-        {"translations": translations, "locale": locale},
+        {"translations": translations, "locale": locale, "locales": locales},
     )
 
 
@@ -189,15 +237,15 @@ def review_detail(request: HttpRequest, translation_id: int) -> HttpResponse:
     if not _is_approved_reviewer(request.user):
         return redirect("l10n_application")
 
-    app = request.user.translator_application
-    locale = app.desired_locale
-
-    if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
-        return redirect("l10n_application")
-
     tr = get_object_or_404(Translation.objects.select_related("string_unit", "locale"), pk=translation_id)
-    if tr.locale_id != locale.id:
-        return redirect("l10n_review")
+
+    # Superadmins can review any locale; regular reviewers only their assigned locale.
+    if not _is_superadmin(request.user):
+        locale = _get_user_locale(request.user)
+        if not locale or tr.locale_id != locale.id:
+            return redirect("l10n_review")
+        if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
+            return redirect("l10n_application")
 
     if request.method == "POST":
         form = TranslationReviewForm(request.POST, instance=tr)
@@ -232,11 +280,15 @@ def translator_queue(request: HttpRequest) -> HttpResponse:
     if not _is_approved_translator(request.user):
         return redirect("l10n_application")
 
-    app = request.user.translator_application
-    locale = app.desired_locale
-
-    if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
+    locale = _get_user_locale(request.user, request)
+    if not locale:
         return redirect("l10n_application")
+
+    if not _is_superadmin(request.user):
+        if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
+            return redirect("l10n_application")
+
+    locales = Locale.objects.filter(enabled=True).order_by("name") if _is_superadmin(request.user) else None
 
     translations = (
         Translation.objects.filter(locale=locale)
@@ -252,7 +304,7 @@ def translator_queue(request: HttpRequest) -> HttpResponse:
     return render(
         request,
         "l10n/translator_list.html",
-        {"translations": translations, "locale": locale},
+        {"translations": translations, "locale": locale, "locales": locales},
     )
 
 
@@ -261,15 +313,14 @@ def translator_detail(request: HttpRequest, translation_id: int) -> HttpResponse
     if not _is_approved_translator(request.user):
         return redirect("l10n_application")
 
-    app = request.user.translator_application
-    locale = app.desired_locale
-
-    if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
-        return redirect("l10n_application")
-
     tr = get_object_or_404(Translation.objects.select_related("string_unit", "locale"), pk=translation_id)
-    if tr.locale_id != locale.id:
-        return redirect("l10n_translate")
+
+    if not _is_superadmin(request.user):
+        locale = _get_user_locale(request.user)
+        if not locale or tr.locale_id != locale.id:
+            return redirect("l10n_translate")
+        if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
+            return redirect("l10n_application")
 
     if request.method == "POST":
         form = TranslationCorrectionForm(request.POST, instance=tr)
