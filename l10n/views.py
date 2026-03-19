@@ -368,14 +368,20 @@ def approver_queue(request: HttpRequest) -> HttpResponse:
 
     translations = Translation.objects.none()
     if selected_locale:
+        if getattr(request.user, "is_superuser", False):
+            # Superadmins can approve machine drafts directly without a prior review step.
+            status_filter = models.Q(status=Translation.TranslationStatus.IN_REVIEW) | models.Q(
+                status=Translation.TranslationStatus.MACHINE_DRAFT
+            )
+        else:
+            status_filter = models.Q(status=Translation.TranslationStatus.IN_REVIEW)
+
         translations = (
             Translation.objects.filter(locale=selected_locale)
-            .filter(status=Translation.TranslationStatus.IN_REVIEW)
+            .filter(status_filter)
             .filter(approved_text__isnull=True)
-            .exclude(
-                (models.Q(reviewer_text__isnull=True) | models.Q(reviewer_text=""))
-                & (models.Q(translator_text__isnull=True) | models.Q(translator_text=""))
-            )
+            .exclude(machine_draft__isnull=True)
+            .exclude(machine_draft="")
             .select_related("string_unit")
             .order_by("string_unit__location", "string_unit__message_id")
             [:200]
@@ -429,7 +435,11 @@ def approver_detail(request: HttpRequest, translation_id: int) -> HttpResponse:
     else:
         initial = {}
         if not (tr.approved_text or "").strip():
-            candidate = (tr.translator_text or "").strip() or (tr.reviewer_text or "").strip()
+            candidate = (
+                (tr.translator_text or "").strip()
+                or (tr.reviewer_text or "").strip()
+                or (tr.machine_draft or "").strip()
+            )
             if candidate:
                 initial["approved_text"] = candidate
         form = TranslationFinalizeForm(instance=tr, initial=initial)

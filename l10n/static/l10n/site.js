@@ -332,7 +332,7 @@
           }
         });
       },
-      { threshold: 0.07, rootMargin: "0px 0px -28px 0px" }
+      { threshold: 0, rootMargin: "0px 0px -28px 0px" }
     );
 
     document.querySelectorAll("[data-reveal]").forEach(function (el) {

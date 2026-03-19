@@ -62,14 +62,14 @@
 
       <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
         {% if tr.reviewer_text %}
-          <button class="btn btn-small" type="button" id="js-use-reviewer"
+          <button class="btn btn-small btn-primary" type="button" id="js-use-reviewer"
                   title="Use the reviewer's suggestion">Use reviewer text</button>
         {% endif %}
         {% if tr.translator_text %}
           <button class="btn btn-small" type="button" id="js-use-translator"
                   title="Use the translator's suggestion">Use translator text</button>
         {% endif %}
-        <button class="btn btn-small" type="button" id="js-use-ai"
+        <button class="btn btn-small {% if not tr.reviewer_text and not tr.translator_text %}btn-primary{% endif %}" type="button" id="js-use-ai"
                 title="Use the original AI draft">Use AI draft</button>
       </div>
 
