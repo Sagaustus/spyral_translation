@@ -1,15 +1,15 @@
 {% extends "l10n/base.html" %}
 
-{% block title %}Apply to be a Translator — Voyant Tools Localization Hub{% endblock %}
+{% block title %}Apply to Join — Voyant Tools Localization Hub{% endblock %}
 
 {% block content %}
   <div style="max-width: 640px;">
     <div class="page-heading">
-      <h2>Apply to be a Human-in-the-Loop Translator</h2>
+      <h2>Apply to Join the Translation Team</h2>
       <p class="muted mb-0">
-        Submit this form to request reviewer access for a specific interface language.
-        After submitting, you can log in and explore the site, but you will not be able to
-        review translations until a SuperAdmin approves your application.
+        Submit this form to apply as a reviewer, translator, or approver for a specific language.
+        After submitting, you can log in and explore the site. A SuperAdmin will review your
+        application and assign you to the appropriate queue.
       </p>
     </div>
 
@@ -22,5 +22,9 @@
         </div>
       </form>
     </div>
+
+    <p class="muted text-sm" style="margin-top: 12px;">
+      Not sure which role? <a href="{% url 'l10n_call_translators' %}">Learn about the three roles</a> and what each one does.
+    </p>
   </div>
 {% endblock %}

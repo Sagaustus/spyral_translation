@@ -156,7 +156,11 @@ def apply(request: HttpRequest) -> HttpResponse:
             login(request, application.user)
             return redirect("l10n_application")
     else:
-        form = TranslatorApplicationForm()
+        initial = {}
+        role = request.GET.get("role", "").upper()
+        if role in dict(TranslatorApplication.DesiredRole.choices):
+            initial["desired_role"] = role
+        form = TranslatorApplicationForm(initial=initial)
 
     return render(request, "l10n/apply.html", {"form": form})
 

@@ -6,16 +6,16 @@
   <div class="page-heading">
     <h2>Current Team</h2>
     <p class="muted mb-0">
-      Team members and volunteer reviewers who participate in the human-in-the-loop validation process.
+      Team members and volunteers who participate in the human-in-the-loop translation and validation process.
     </p>
   </div>
 
   <div class="card mt-0" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
     <p class="mb-0">
-      Applicants provide affiliation and language background to help ensure high-quality review.
+      Applicants provide affiliation and language background to help ensure high-quality translations.
     </p>
     <div style="display: flex; gap: 10px; flex-shrink: 0;">
-      <a class="btn btn-primary" href="{% url 'l10n_apply' %}">Apply to join</a>
+      <a class="btn btn-primary" href="{% url 'l10n_call_translators' %}">Join us</a>
       <a class="btn" href="{% url 'l10n_login' %}">Login</a>
     </div>
   </div>
@@ -37,7 +37,16 @@
               {% if app.affiliation %}
                 <p class="member-affiliation">{{ app.affiliation }}</p>
               {% endif %}
-              <span class="badge">{{ app.desired_locale.name }} ({{ app.desired_locale.code }})</span>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                <span class="badge">{{ app.desired_locale.name }} ({{ app.desired_locale.code }})</span>
+                {% if app.desired_role == 'REVIEWER' %}
+                  <span class="badge" style="background: var(--clr-info, #3b82f6); color: #fff;">Reviewer</span>
+                {% elif app.desired_role == 'TRANSLATOR' %}
+                  <span class="badge" style="background: var(--clr-warning, #f59e0b); color: #fff;">Translator</span>
+                {% elif app.desired_role == 'APPROVER' %}
+                  <span class="badge" style="background: var(--clr-success, #16a34a); color: #fff;">Approver</span>
+                {% endif %}
+              </div>
             </div>
           </div>
         </div>
@@ -50,7 +59,7 @@
   {% endif %}
 
   <p style="margin-top: 24px;">
-    Want to join the reviewer pool? See the
-    <a href="{% url 'l10n_call_translators' %}">Call for Human-in-the-Loop Translators</a>.
+    Want to join? See the
+    <a href="{% url 'l10n_call_translators' %}">roles and how to apply</a>.
   </p>
 {% endblock %}

@@ -74,6 +74,11 @@ class TranslatorApplicationForm(forms.Form):
     wants_acknowledgement = forms.BooleanField(required=False, initial=True)
     acknowledgement_name = forms.CharField(max_length=200, required=False)
 
+    desired_role = forms.ChoiceField(
+        choices=TranslatorApplication.DesiredRole.choices,
+        initial=TranslatorApplication.DesiredRole.REVIEWER,
+    )
+
     photo = forms.ImageField(required=False)
 
     def clean_username(self):
@@ -128,6 +133,7 @@ class TranslatorApplicationForm(forms.Form):
             wants_acknowledgement=bool(self.cleaned_data.get("wants_acknowledgement")),
             acknowledgement_name=(self.cleaned_data.get("acknowledgement_name") or "").strip(),
             photo=self.cleaned_data.get("photo"),
+            desired_role=self.cleaned_data.get("desired_role", TranslatorApplication.DesiredRole.REVIEWER),
             status=TranslatorApplication.ApplicationStatus.PENDING,
         )
         return application

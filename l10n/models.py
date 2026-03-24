@@ -228,6 +228,11 @@ class TranslatorApplication(models.Model):
         APPROVED = "APPROVED", "Approved"
         REJECTED = "REJECTED", "Rejected"
 
+    class DesiredRole(models.TextChoices):
+        REVIEWER = "REVIEWER", "Reviewer"
+        TRANSLATOR = "TRANSLATOR", "Translator"
+        APPROVER = "APPROVER", "Approver"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -250,6 +255,12 @@ class TranslatorApplication(models.Model):
     acknowledgement_name = models.CharField(max_length=200, blank=True)
 
     photo = models.ImageField(upload_to="team_photos/", blank=True, null=True)
+
+    desired_role = models.CharField(
+        max_length=16,
+        choices=DesiredRole.choices,
+        default=DesiredRole.REVIEWER,
+    )
 
     status = models.CharField(
         max_length=16,
