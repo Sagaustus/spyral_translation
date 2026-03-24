@@ -130,11 +130,15 @@ def progress(request: HttpRequest) -> HttpResponse:
 
 
 def team(request: HttpRequest) -> HttpResponse:
-    approved = (
+    approved = list(
         TranslatorApplication.objects.filter(status=TranslatorApplication.ApplicationStatus.APPROVED)
         .select_related("user", "desired_locale")
         .order_by("full_name")
     )
+    # Clear photo references where the file no longer exists on disk
+    for app in approved:
+        if app.photo and not app.photo.storage.exists(app.photo.name):
+            app.photo = None
     return render(request, "l10n/team.html", {"approved_applications": approved})
 
 
