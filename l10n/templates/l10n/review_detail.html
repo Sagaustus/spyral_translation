@@ -6,7 +6,22 @@
   <div class="page-heading">
     <div class="action-strip">
       <h2 style="margin: 0;">Review Translation</h2>
-      <a class="btn btn-small" href="{% url 'l10n_review' %}" data-shortcut-back>&#8592; Back to queue</a>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        {% if prev_id %}
+          <a class="btn btn-small" href="{% url 'l10n_review_detail' prev_id %}" title="Previous item (Left arrow)">&#8592; Prev</a>
+        {% else %}
+          <span class="btn btn-small" style="opacity: 0.4; pointer-events: none;">&#8592; Prev</span>
+        {% endif %}
+        {% if queue_position %}
+          <span class="muted text-sm" style="white-space: nowrap;">{{ queue_position }} / {{ queue_total }}</span>
+        {% endif %}
+        {% if next_id %}
+          <a class="btn btn-small" href="{% url 'l10n_review_detail' next_id %}" title="Next item (Right arrow)">Next &#8594;</a>
+        {% else %}
+          <span class="btn btn-small" style="opacity: 0.4; pointer-events: none;">Next &#8594;</span>
+        {% endif %}
+        <a class="btn btn-small" href="{% url 'l10n_review' %}" data-shortcut-back>Back to queue</a>
+      </div>
     </div>
     <div class="badge-group" style="margin-top: 10px;">
       <span class="badge" data-status="{{ tr.status }}">{{ tr.get_status_display }}</span>
@@ -112,7 +127,7 @@
         </div>
 
         <div class="form-actions">
-          <button class="btn btn-primary" type="submit">Save review</button>
+          <button class="btn btn-primary" type="submit">Save &amp; next</button>
           <button class="btn btn-small" type="button" data-copy data-copy-from="#id_reviewer_text">Copy my text</button>
         </div>
       </form>
@@ -120,9 +135,12 @@
       <p class="muted text-sm" style="margin-top: 14px; margin-bottom: 0;">
         Keyboard:
         <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Ctrl+Enter</kbd>
-        to save &nbsp;&middot;&nbsp;
+        save &amp; next &nbsp;&middot;&nbsp;
+        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">&#8592;</kbd>
+        <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">&#8594;</kbd>
+        prev / next &nbsp;&middot;&nbsp;
         <kbd style="font-family: monospace; background: var(--clr-surface-2); border: 1px solid var(--clr-border); border-radius: 4px; padding: 1px 6px; font-size: 0.82em;">Esc</kbd>
-        to go back
+        back to queue
       </p>
     </div>
   </div>
@@ -179,6 +197,25 @@
       if (!textArea.value.trim()) {
         textArea.placeholder = 'Please describe the issue (dialect concern, cultural question, etc.)...';
       }
+    });
+
+    // Arrow key navigation (only when not focused on an input/textarea)
+    document.addEventListener('keydown', function (e) {
+      var tag = document.activeElement.tagName;
+      if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return;
+
+      {% if prev_id %}
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        window.location.href = "{% url 'l10n_review_detail' prev_id %}";
+      }
+      {% endif %}
+      {% if next_id %}
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        window.location.href = "{% url 'l10n_review_detail' next_id %}";
+      }
+      {% endif %}
     });
   })();
   </script>

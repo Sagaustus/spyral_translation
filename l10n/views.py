@@ -205,15 +205,7 @@ def review_queue(request: HttpRequest) -> HttpResponse:
 
     locales = Locale.objects.filter(enabled=True).order_by("name") if _is_superadmin(request.user) else None
 
-    translations_qs = (
-        Translation.objects.filter(locale=locale)
-        .exclude(machine_draft__isnull=True)
-        .exclude(machine_draft="")
-        .filter(approved_text__isnull=True)
-        .filter(status=Translation.TranslationStatus.MACHINE_DRAFT)
-        .select_related("string_unit")
-        .order_by("string_unit__location", "string_unit__message_id")
-    )
+    translations_qs = _review_queue_qs(locale)
 
     paginator = Paginator(translations_qs, QUEUE_PAGE_SIZE)
     page_obj = paginator.get_page(request.GET.get("page"))
@@ -223,6 +215,19 @@ def review_queue(request: HttpRequest) -> HttpResponse:
         request,
         "l10n/review_list.html",
         {"translations": page_obj, "page_obj": page_obj, "page_query": page_query, "locale": locale, "locales": locales},
+    )
+
+
+def _review_queue_qs(locale):
+    """Return the base queryset for the review queue (same ordering as review_queue view)."""
+    return (
+        Translation.objects.filter(locale=locale)
+        .exclude(machine_draft__isnull=True)
+        .exclude(machine_draft="")
+        .filter(approved_text__isnull=True)
+        .filter(status=Translation.TranslationStatus.MACHINE_DRAFT)
+        .select_related("string_unit")
+        .order_by("string_unit__location", "string_unit__message_id")
     )
 
 
@@ -240,6 +245,19 @@ def review_detail(request: HttpRequest, translation_id: int) -> HttpResponse:
             return redirect("l10n_review")
         if not LocaleAssignment.objects.filter(user=request.user, locale=locale).exists():
             return redirect("l10n_application")
+
+    # Compute prev/next in the review queue for this locale
+    queue_ids = list(
+        _review_queue_qs(tr.locale).values_list("id", flat=True)
+    )
+    try:
+        idx = queue_ids.index(tr.id)
+    except ValueError:
+        idx = -1
+    prev_id = queue_ids[idx - 1] if idx > 0 else None
+    next_id = queue_ids[idx + 1] if 0 <= idx < len(queue_ids) - 1 else None
+    queue_position = idx + 1 if idx >= 0 else None
+    queue_total = len(queue_ids)
 
     if request.method == "POST":
         form = TranslationReviewForm(request.POST, instance=tr)
@@ -262,11 +280,21 @@ def review_detail(request: HttpRequest, translation_id: int) -> HttpResponse:
                     "updated_at",
                 ]
             )
+            # After saving, go to the next item in queue (or back to queue if none left)
+            if next_id:
+                return redirect("l10n_review_detail", translation_id=next_id)
             return redirect("l10n_review")
     else:
         form = TranslationReviewForm(instance=tr)
 
-    return render(request, "l10n/review_detail.html", {"tr": tr, "form": form})
+    return render(request, "l10n/review_detail.html", {
+        "tr": tr,
+        "form": form,
+        "prev_id": prev_id,
+        "next_id": next_id,
+        "queue_position": queue_position,
+        "queue_total": queue_total,
+    })
 
 
 @login_required
