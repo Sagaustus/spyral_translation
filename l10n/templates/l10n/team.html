@@ -26,13 +26,12 @@
       {% for app in approved_applications %}
         <div class="card">
           <div class="member-card">
-            {% if app.photo %}
-              <img
-                class="member-photo"
-                src="{{ app.photo.url }}"
-                alt="{{ app.full_name }}"
-              />
-            {% endif %}
+            <img
+              class="member-photo"
+              src="{% if app.photo %}{{ app.photo.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23ddd'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-size='32' fill='%23999'%3E{{ app.full_name|truncatechars:1 }}%3C/text%3E%3C/svg%3E{% endif %}"
+              alt="{{ app.full_name }}"
+              onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2780%27 height=%2780%27%3E%3Crect width=%2780%27 height=%2780%27 fill=%27%23ddd%27/%3E%3Ctext x=%2750%25%27 y=%2754%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 font-size=%2732%27 fill=%27%23999%27%3E?%3C/text%3E%3C/svg%3E';"
+            />
             <div class="member-info">
               <p class="member-name">{{ app.full_name }}</p>
               {% if app.affiliation %}
