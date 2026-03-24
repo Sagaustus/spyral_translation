@@ -38,17 +38,22 @@
   <div class="section-label"><h3>By language</h3></div>
 
   {% if locale_stats %}
+  <div style="margin-bottom: 12px;">
+    <input type="text" id="js-lang-filter" placeholder="Filter languages…"
+           style="width: 100%; max-width: 360px; padding: 8px 12px; font-size: 1rem; border: 2px solid var(--clr-border); border-radius: 6px; font-family: inherit;">
+    <span id="js-filter-count" class="muted text-sm" style="margin-left: 8px;"></span>
+  </div>
   <div class="card mt-0" style="overflow-x: auto; max-height: 70vh; overflow-y: auto;">
-    <table style="width: 100%; border-collapse: collapse; min-width: 680px;">
+    <table id="js-progress-table" style="width: 100%; border-collapse: collapse; min-width: 680px;">
       <thead>
         <tr style="text-align: left; border-bottom: 2px solid var(--clr-border); position: sticky; top: 0; background: var(--clr-surface, #fff); z-index: 1;">
-          <th style="padding: 10px 12px;">Language</th>
-          <th style="padding: 10px 12px; text-align: center;">AI Translated</th>
-          <th style="padding: 10px 12px; text-align: center;">Approved</th>
-          <th style="padding: 10px 12px; text-align: center;">Awaiting Review</th>
-          <th style="padding: 10px 12px; text-align: center;">In Review</th>
-          <th style="padding: 10px 12px; text-align: center;">QA Flags</th>
-          <th style="padding: 10px 12px; text-align: center;">Progress</th>
+          <th style="padding: 10px 12px; cursor: pointer; user-select: none;" data-sort="text" data-col="0">Language <span class="sort-arrow">&#x25B2;</span></th>
+          <th style="padding: 10px 12px; text-align: center; cursor: pointer; user-select: none;" data-sort="num" data-col="1">AI Translated <span class="sort-arrow"></span></th>
+          <th style="padding: 10px 12px; text-align: center; cursor: pointer; user-select: none;" data-sort="num" data-col="2">Approved <span class="sort-arrow"></span></th>
+          <th style="padding: 10px 12px; text-align: center; cursor: pointer; user-select: none;" data-sort="num" data-col="3">Awaiting Review <span class="sort-arrow"></span></th>
+          <th style="padding: 10px 12px; text-align: center; cursor: pointer; user-select: none;" data-sort="num" data-col="4">In Review <span class="sort-arrow"></span></th>
+          <th style="padding: 10px 12px; text-align: center; cursor: pointer; user-select: none;" data-sort="num" data-col="5">QA Flags <span class="sort-arrow"></span></th>
+          <th style="padding: 10px 12px; text-align: center; cursor: pointer; user-select: none;" data-sort="num" data-col="6">Progress <span class="sort-arrow"></span></th>
           <th style="padding: 10px 12px; text-align: center;">Action</th>
         </tr>
       </thead>
@@ -57,13 +62,13 @@
         <tr style="border-bottom: 1px solid var(--clr-border);">
 
           {# Language name + code #}
-          <td style="padding: 10px 12px;">
+          <td style="padding: 10px 12px;" data-sort-value="{{ s.locale.name|lower }}">
             <div style="font-weight: 600;">{{ s.locale.name }}</div>
             <span class="locale-code">{{ s.locale.code }}</span>
           </td>
 
           {# AI Translated #}
-          <td style="padding: 10px 12px; text-align: center;">
+          <td style="padding: 10px 12px; text-align: center;" data-sort-value="{{ s.ai_translated }}">
             {% if s.ai_translated %}
               <span style="color: var(--clr-info, #3b82f6); font-weight: 600;">{{ s.ai_translated }}</span>
             {% else %}
@@ -72,7 +77,7 @@
           </td>
 
           {# Approved #}
-          <td style="padding: 10px 12px; text-align: center;">
+          <td style="padding: 10px 12px; text-align: center;" data-sort-value="{{ s.approved }}">
             {% if s.approved %}
               <span style="color: var(--clr-success); font-weight: 600;">{{ s.approved }}</span>
             {% else %}
@@ -81,7 +86,7 @@
           </td>
 
           {# Awaiting review (machine draft) #}
-          <td style="padding: 10px 12px; text-align: center;">
+          <td style="padding: 10px 12px; text-align: center;" data-sort-value="{{ s.machine_draft }}">
             {% if s.machine_draft %}
               <span style="color: var(--clr-warning); font-weight: 600;">{{ s.machine_draft }}</span>
             {% else %}
@@ -90,7 +95,7 @@
           </td>
 
           {# In review #}
-          <td style="padding: 10px 12px; text-align: center;">
+          <td style="padding: 10px 12px; text-align: center;" data-sort-value="{{ s.in_review }}">
             {% if s.in_review %}
               <span style="font-weight: 600;">{{ s.in_review }}</span>
             {% else %}
@@ -99,7 +104,7 @@
           </td>
 
           {# QA flags #}
-          <td style="padding: 10px 12px; text-align: center;">
+          <td style="padding: 10px 12px; text-align: center;" data-sort-value="{{ s.qa_warnings }}">
             {% if s.qa_warnings %}
               <span style="color: var(--clr-danger); font-weight: 600;">&#9888; {{ s.qa_warnings }}</span>
             {% else %}
@@ -108,7 +113,7 @@
           </td>
 
           {# Progress bar #}
-          <td style="padding: 10px 12px; min-width: 130px;">
+          <td style="padding: 10px 12px; min-width: 130px;" data-sort-value="{{ s.pct }}">
             <div style="display: flex; align-items: center; gap: 8px;">
               <div style="flex: 1; background: var(--clr-surface-2); border-radius: 4px; height: 8px; overflow: hidden;">
                 <div style="width: {{ s.pct }}%; background: var(--clr-success); height: 100%; border-radius: 4px;"></div>
@@ -201,4 +206,69 @@
       </div>
     </div>
   </div>
+
+  <script>
+  (function () {
+    var table = document.getElementById('js-progress-table');
+    if (!table) return;
+    var tbody = table.tBodies[0];
+    var headers = table.querySelectorAll('th[data-sort]');
+    var filterInput = document.getElementById('js-lang-filter');
+    var filterCount = document.getElementById('js-filter-count');
+    var rows = Array.from(tbody.rows);
+    var currentCol = 0;
+    var currentAsc = true;
+
+    // Sort
+    function sortTable(colIdx, type, asc) {
+      rows.sort(function (a, b) {
+        var av = a.cells[colIdx].getAttribute('data-sort-value') || '';
+        var bv = b.cells[colIdx].getAttribute('data-sort-value') || '';
+        if (type === 'num') {
+          av = parseFloat(av) || 0;
+          bv = parseFloat(bv) || 0;
+          return asc ? av - bv : bv - av;
+        }
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+      applyFilter();
+    }
+
+    headers.forEach(function (th) {
+      th.addEventListener('click', function () {
+        var col = parseInt(th.getAttribute('data-col'));
+        var type = th.getAttribute('data-sort');
+        if (currentCol === col) {
+          currentAsc = !currentAsc;
+        } else {
+          currentCol = col;
+          currentAsc = type === 'text';
+        }
+        // Update arrows
+        headers.forEach(function (h) {
+          h.querySelector('.sort-arrow').textContent = '';
+        });
+        th.querySelector('.sort-arrow').textContent = currentAsc ? '\u25B2' : '\u25BC';
+        sortTable(col, type, currentAsc);
+      });
+    });
+
+    // Filter
+    function applyFilter() {
+      var term = filterInput.value.trim().toLowerCase();
+      var visible = 0;
+      rows.forEach(function (r) {
+        var lang = (r.cells[0].getAttribute('data-sort-value') || '') +
+                   ' ' + (r.cells[0].querySelector('.locale-code') || {}).textContent;
+        var match = !term || lang.toLowerCase().indexOf(term) !== -1;
+        r.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      filterCount.textContent = term ? visible + ' of ' + rows.length + ' languages' : '';
+    }
+
+    filterInput.addEventListener('input', applyFilter);
+  })();
+  </script>
 {% endblock %}
