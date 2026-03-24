@@ -49,3 +49,12 @@ htmlcov/
 
 # Docker
 *.pid
+
+# GitHub workflows (PAT lacks workflow scope)
+.github/
+
+# Screenshots & slide generation
+screenshots/
+Voyant_L10n_Hub_Guide.pptx
+make_slides.py
+take_screenshots.py
