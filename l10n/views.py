@@ -71,13 +71,13 @@ def progress(request: HttpRequest) -> HttpResponse:
             in_review=Count(
                 "id", filter=Q(status=Translation.TranslationStatus.IN_REVIEW)
             ),
-            machine_draft=Count(
-                "id", filter=Q(status=Translation.TranslationStatus.MACHINE_DRAFT)
-            ),
             qa_warnings=Count("id", filter=~Q(qa_flags=[])),
             ai_translated=Count(
                 "id",
                 filter=Q(machine_draft__isnull=False) & ~Q(machine_draft=""),
+            ),
+            machine_draft_count=Count(
+                "id", filter=Q(status=Translation.TranslationStatus.MACHINE_DRAFT)
             ),
         )
     )
@@ -91,7 +91,7 @@ def progress(request: HttpRequest) -> HttpResponse:
         row = stats_by_locale.get(locale.id, {})
         approved = row.get("approved", 0)
         in_review = row.get("in_review", 0)
-        machine_draft = row.get("machine_draft", 0)
+        machine_draft = row.get("machine_draft_count", 0)
         qa_warnings = row.get("qa_warnings", 0)
         ai_translated = row.get("ai_translated", 0)
         pct = round((approved / total_strings * 100) if total_strings else 0, 1)
