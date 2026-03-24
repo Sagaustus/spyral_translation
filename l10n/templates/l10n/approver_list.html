@@ -5,7 +5,7 @@
 {% block content %}
   <div class="page-heading">
     <h2>Approver Queue</h2>
-    <p class="muted mb-0">Translations ready for final approval (up to 200 shown). Staff can approve AI drafts directly.</p>
+    <p class="muted mb-0">Translations ready for final approval ({{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}). Staff can approve AI drafts directly.</p>
   </div>
 
   <div class="card mt-0">
@@ -49,6 +49,7 @@
         {% endfor %}
       </ul>
     </div>
+    {% include "l10n/_pagination.html" %}
   {% else %}
     <div class="card">
       <p class="mb-0 muted">No items awaiting approval.</p>

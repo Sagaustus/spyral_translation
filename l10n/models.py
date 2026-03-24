@@ -149,6 +149,9 @@ class Translation(models.Model):
                 name="uniq_string_unit_locale",
             ),
         ]
+        indexes = [
+            models.Index(fields=["locale", "status"], name="idx_translation_locale_status"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.locale.code} :: {self.string_unit.location} :: {self.string_unit.message_id}"

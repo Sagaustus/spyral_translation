@@ -9,11 +9,14 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db import models
+from django.db.models import Count, Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.shortcuts import render
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
 
 from .forms import (
     ImportVoyantCSVForm,
@@ -23,9 +26,16 @@ from .forms import (
     TranslatorApplicationForm,
 )
 from .models import Locale, LocaleAssignment, StringUnit, Translation, TranslatorApplication
+from .permissions import (
+    is_approver as _is_approver,
+    is_approved_reviewer as _is_approved_reviewer,
+    is_approved_translator as _is_approved_translator,
+    is_superadmin as _is_superadmin,
+)
 
 
 YORUBA_LOCALE_CODE = "yo"
+QUEUE_PAGE_SIZE = 50
 
 
 # ── Public pages ──────────────────────────────────────────────────────────────
@@ -43,27 +53,41 @@ def workflow(request: HttpRequest) -> HttpResponse:
     return render(request, "l10n/workflow.html")
 
 
+@cache_page(60 * 10)
 def progress(request: HttpRequest) -> HttpResponse:
     """Public per-language translation progress tracker."""
     locales = Locale.objects.filter(enabled=True).order_by("name")
     total_strings = StringUnit.objects.count()
 
+    # Single aggregated query instead of 4-5 queries per locale
+    stats_qs = (
+        Translation.objects.filter(locale__enabled=True)
+        .values("locale_id")
+        .annotate(
+            approved=Count(
+                "id",
+                filter=Q(approved_text__isnull=False) & ~Q(approved_text=""),
+            ),
+            in_review=Count(
+                "id", filter=Q(status=Translation.TranslationStatus.IN_REVIEW)
+            ),
+            machine_draft=Count(
+                "id", filter=Q(status=Translation.TranslationStatus.MACHINE_DRAFT)
+            ),
+            qa_warnings=Count("id", filter=~Q(qa_flags=[])),
+        )
+    )
+    stats_by_locale = {row["locale_id"]: row for row in stats_qs}
+
     locale_stats = []
     total_approved = 0
     total_needs_review = 0
     for locale in locales:
-        approved = (
-            Translation.objects.filter(locale=locale, approved_text__isnull=False)
-            .exclude(approved_text="")
-            .count()
-        )
-        in_review = Translation.objects.filter(
-            locale=locale, status=Translation.TranslationStatus.IN_REVIEW
-        ).count()
-        machine_draft = Translation.objects.filter(
-            locale=locale, status=Translation.TranslationStatus.MACHINE_DRAFT
-        ).count()
-        qa_warnings = Translation.objects.filter(locale=locale).exclude(qa_flags=[]).count()
+        row = stats_by_locale.get(locale.id, {})
+        approved = row.get("approved", 0)
+        in_review = row.get("in_review", 0)
+        machine_draft = row.get("machine_draft", 0)
+        qa_warnings = row.get("qa_warnings", 0)
         pct = round((approved / total_strings * 100) if total_strings else 0, 1)
         draft_pct = round(((approved + machine_draft + in_review) / total_strings * 100) if total_strings else 0, 1)
 
@@ -135,48 +159,6 @@ def application_status(request: HttpRequest) -> HttpResponse:
     return render(request, "l10n/application_status.html", {"application": application})
 
 
-def _is_superadmin(user) -> bool:
-    if not user.is_authenticated:
-        return False
-    return getattr(user, "is_superuser", False)
-
-
-def _is_approved_reviewer(user) -> bool:
-    if not user.is_authenticated:
-        return False
-    if _is_superadmin(user):
-        return True
-    try:
-        app = user.translator_application
-    except Exception:
-        return False
-    if app.status != TranslatorApplication.ApplicationStatus.APPROVED:
-        return False
-    return user.groups.filter(name="L10N_REVIEWER").exists()
-
-
-def _is_approved_translator(user) -> bool:
-    if not user.is_authenticated:
-        return False
-    if _is_superadmin(user):
-        return True
-    try:
-        app = user.translator_application
-    except Exception:
-        return False
-    if app.status != TranslatorApplication.ApplicationStatus.APPROVED:
-        return False
-    return user.groups.filter(name="L10N_TRANSLATOR").exists()
-
-
-def _is_approver(user) -> bool:
-    if not user.is_authenticated:
-        return False
-    if _is_superadmin(user):
-        return True
-    return user.groups.filter(name__in=["L10N_APPROVER", "L10N_SUPERADMIN"]).exists()
-
-
 def _get_user_locale(user, request=None):
     """Return the locale for the user, or None.
 
@@ -214,7 +196,7 @@ def review_queue(request: HttpRequest) -> HttpResponse:
 
     locales = Locale.objects.filter(enabled=True).order_by("name") if _is_superadmin(request.user) else None
 
-    translations = (
+    translations_qs = (
         Translation.objects.filter(locale=locale)
         .exclude(machine_draft__isnull=True)
         .exclude(machine_draft="")
@@ -222,13 +204,16 @@ def review_queue(request: HttpRequest) -> HttpResponse:
         .filter(status=Translation.TranslationStatus.MACHINE_DRAFT)
         .select_related("string_unit")
         .order_by("string_unit__location", "string_unit__message_id")
-        [:200]
     )
+
+    paginator = Paginator(translations_qs, QUEUE_PAGE_SIZE)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    page_query = f"locale={locale.code}" if locales else ""
 
     return render(
         request,
         "l10n/review_list.html",
-        {"translations": translations, "locale": locale, "locales": locales},
+        {"translations": page_obj, "page_obj": page_obj, "page_query": page_query, "locale": locale, "locales": locales},
     )
 
 
@@ -290,7 +275,7 @@ def translator_queue(request: HttpRequest) -> HttpResponse:
 
     locales = Locale.objects.filter(enabled=True).order_by("name") if _is_superadmin(request.user) else None
 
-    translations = (
+    translations_qs = (
         Translation.objects.filter(locale=locale)
         .exclude(machine_draft__isnull=True)
         .exclude(machine_draft="")
@@ -298,13 +283,16 @@ def translator_queue(request: HttpRequest) -> HttpResponse:
         .filter(status=Translation.TranslationStatus.REJECTED)
         .select_related("string_unit")
         .order_by("string_unit__location", "string_unit__message_id")
-        [:200]
     )
+
+    paginator = Paginator(translations_qs, QUEUE_PAGE_SIZE)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    page_query = f"locale={locale.code}" if locales else ""
 
     return render(
         request,
         "l10n/translator_list.html",
-        {"translations": translations, "locale": locale, "locales": locales},
+        {"translations": page_obj, "page_obj": page_obj, "page_query": page_query, "locale": locale, "locales": locales},
     )
 
 
@@ -384,14 +372,19 @@ def approver_queue(request: HttpRequest) -> HttpResponse:
             .exclude(machine_draft="")
             .select_related("string_unit")
             .order_by("string_unit__location", "string_unit__message_id")
-            [:200]
         )
+
+    paginator = Paginator(translations, QUEUE_PAGE_SIZE)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    page_query = f"locale={selected_locale.code}" if selected_locale else ""
 
     return render(
         request,
         "l10n/approver_list.html",
         {
-            "translations": translations,
+            "translations": page_obj,
+            "page_obj": page_obj,
+            "page_query": page_query,
             "locales": locales,
             "selected_locale": selected_locale,
         },
@@ -462,36 +455,46 @@ def _ensure_yoruba_locale() -> Locale:
 
 
 @staff_member_required
+@cache_page(60 * 5)
 def dashboard(request: HttpRequest) -> HttpResponse:
     """Multi-locale staff dashboard with per-language progress stats."""
     locales = Locale.objects.filter(enabled=True).order_by("name")
     total_strings = StringUnit.objects.count()
 
+    # Single aggregated query instead of 4-5 queries per locale
+    stats_qs = (
+        Translation.objects.filter(locale__enabled=True)
+        .values("locale_id")
+        .annotate(
+            approved=Count(
+                "id",
+                filter=Q(approved_text__isnull=False) & ~Q(approved_text=""),
+            ),
+            qa_warnings=Count("id", filter=~Q(qa_flags=[])),
+            stale=Count(
+                "id", filter=Q(status=Translation.TranslationStatus.STALE)
+            ),
+            in_review=Count(
+                "id", filter=Q(status=Translation.TranslationStatus.IN_REVIEW)
+            ),
+        )
+    )
+    stats_by_locale = {row["locale_id"]: row for row in stats_qs}
+
     locale_stats = []
     for locale in locales:
-        approved = (
-            Translation.objects.filter(locale=locale, approved_text__isnull=False)
-            .exclude(approved_text="")
-            .count()
-        )
-        missing = max(total_strings - approved, 0)
-        qa_warnings = Translation.objects.filter(locale=locale).exclude(qa_flags=[]).count()
-        stale = Translation.objects.filter(
-            locale=locale, status=Translation.TranslationStatus.STALE
-        ).count()
-        in_review = Translation.objects.filter(
-            locale=locale, status=Translation.TranslationStatus.IN_REVIEW
-        ).count()
+        row = stats_by_locale.get(locale.id, {})
+        approved = row.get("approved", 0)
         pct = round((approved / total_strings * 100) if total_strings else 0, 1)
 
         locale_stats.append(
             {
                 "locale": locale,
                 "approved": approved,
-                "missing": missing,
-                "qa_warnings": qa_warnings,
-                "stale": stale,
-                "in_review": in_review,
+                "missing": max(total_strings - approved, 0),
+                "qa_warnings": row.get("qa_warnings", 0),
+                "stale": row.get("stale", 0),
+                "in_review": row.get("in_review", 0),
                 "pct": pct,
             }
         )
@@ -513,44 +516,52 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
 
 @staff_member_required
+@cache_page(60 * 5)
 def ai_progress_dashboard(request: HttpRequest) -> HttpResponse:
     """Staff-only dashboard focused on AI draft coverage."""
 
     locales = Locale.objects.filter(enabled=True).order_by("name")
     total_strings = StringUnit.objects.count()
 
+    # Single aggregated query instead of 5 queries per locale
+    stats_qs = (
+        Translation.objects.filter(locale__enabled=True)
+        .values("locale_id")
+        .annotate(
+            drafted=Count(
+                "id",
+                filter=Q(machine_draft__isnull=False) & ~Q(machine_draft=""),
+            ),
+            approved=Count(
+                "id",
+                filter=Q(approved_text__isnull=False) & ~Q(approved_text=""),
+            ),
+            in_review=Count(
+                "id", filter=Q(status=Translation.TranslationStatus.IN_REVIEW)
+            ),
+            rejected=Count(
+                "id", filter=Q(status=Translation.TranslationStatus.REJECTED)
+            ),
+            flagged=Count(
+                "id", filter=Q(status=Translation.TranslationStatus.FLAGGED)
+            ),
+        )
+    )
+    stats_by_locale = {row["locale_id"]: row for row in stats_qs}
+
     locale_stats = []
     for locale in locales:
-        has_draft = (
-            Translation.objects.filter(locale=locale)
-            .exclude(machine_draft__isnull=True)
-            .exclude(machine_draft="")
-            .count()
-        )
-        approved = (
-            Translation.objects.filter(locale=locale, approved_text__isnull=False)
-            .exclude(approved_text="")
-            .count()
-        )
-        in_review = Translation.objects.filter(
-            locale=locale, status=Translation.TranslationStatus.IN_REVIEW
-        ).count()
-        rejected = Translation.objects.filter(
-            locale=locale, status=Translation.TranslationStatus.REJECTED
-        ).count()
-        flagged = Translation.objects.filter(
-            locale=locale, status=Translation.TranslationStatus.FLAGGED
-        ).count()
-
-        pct = round((has_draft / total_strings * 100) if total_strings else 0, 1)
+        row = stats_by_locale.get(locale.id, {})
+        drafted = row.get("drafted", 0)
+        pct = round((drafted / total_strings * 100) if total_strings else 0, 1)
         locale_stats.append(
             {
                 "locale": locale,
-                "drafted": has_draft,
-                "approved": approved,
-                "in_review": in_review,
-                "rejected": rejected,
-                "flagged": flagged,
+                "drafted": drafted,
+                "approved": row.get("approved", 0),
+                "in_review": row.get("in_review", 0),
+                "rejected": row.get("rejected", 0),
+                "flagged": row.get("flagged", 0),
                 "total": total_strings,
                 "pct": pct,
             }

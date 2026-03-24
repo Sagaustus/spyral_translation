@@ -4,7 +4,7 @@
     {% load static %}
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block title %}Voyant Tools Localization Hub{% endblock %}</title>
+    <title>{% block title %}Voyant Tools Translation Hub{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="{% static 'l10n/site.css' %}" />
@@ -26,7 +26,7 @@
               />
             </div>
             <div>
-              <h1 class="site-title">Voyant Tools Localization Hub</h1>
+              <h1 class="site-title">Voyant Tools Translation Hub</h1>
               <p class="site-subtitle">
                 An AI-driven, reproducible workflow for translating digital humanities tools for underrepresented languages.
               </p>
@@ -47,7 +47,10 @@
             <a href="{% url 'l10n_review' %}">Review Queue</a>
             <a href="{% url 'l10n_translate' %}">Translator Queue</a>
             <a href="{% url 'l10n_approve' %}">Approver Queue</a>
-            <a href="{% url 'l10n_logout' %}">Logout</a>
+            <form method="post" action="{% url 'l10n_logout' %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="nav-logout-btn">Logout</button>
+            </form>
           {% else %}
             <a href="{% url 'l10n_login' %}">Login</a>
           {% endif %}

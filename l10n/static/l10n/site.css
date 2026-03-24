@@ -180,6 +180,30 @@ body {
   letter-spacing: 0.01em;
 }
 
+.nav-logout-btn {
+  background: none;
+  display: inline-block;
+  text-decoration: none;
+  padding: 6px 13px;
+  border-radius: var(--r-full);
+  border: 1px solid transparent;
+  color: var(--clr-hdr-muted);
+  font-size: 0.83rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+  letter-spacing: 0.01em;
+}
+.nav-logout-btn:hover {
+  background: rgba(255 255 255 / 0.08);
+  color: var(--clr-hdr-text);
+  border-color: rgba(255 255 255 / 0.12);
+}
+
 .site-nav a:hover {
   background: rgba(255 255 255 / 0.08);
   color: var(--clr-hdr-text);

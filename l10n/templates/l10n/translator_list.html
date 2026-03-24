@@ -6,7 +6,7 @@
   <div class="page-heading">
     <h2>Translator Queue</h2>
     <p class="muted mb-0">
-      Language: <strong>{{ locale.name }}</strong> ({{ locale.code }}) &mdash; showing up to 200 items.
+      Language: <strong>{{ locale.name }}</strong> ({{ locale.code }}) &mdash; {{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}.
     </p>
   </div>
 
@@ -53,6 +53,7 @@
         {% endfor %}
       </ul>
     </div>
+    {% include "l10n/_pagination.html" %}
   {% else %}
     <div class="card mt-0">
       <p class="mb-0 muted">No items to translate right now.</p>

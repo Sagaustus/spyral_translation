@@ -1,0 +1,21 @@
+{% if page_obj.has_other_pages %}
+<nav class="pagination" style="display:flex; justify-content:center; gap:8px; margin:1.5rem 0; flex-wrap:wrap;">
+  {% if page_obj.has_previous %}
+    <a class="btn btn-small" href="?{{ page_query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+  {% endif %}
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="btn btn-small" style="opacity:.6; cursor:default;">{{ num }}</span>
+    {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+      <a class="btn btn-small" href="?{{ page_query }}&page={{ num }}">{{ num }}</a>
+    {% elif num == 1 or num == page_obj.paginator.num_pages %}
+      <a class="btn btn-small" href="?{{ page_query }}&page={{ num }}">{{ num }}</a>
+    {% elif num == 2 or num == page_obj.paginator.num_pages|add:"-1" %}
+      <span style="align-self:end;">...</span>
+    {% endif %}
+  {% endfor %}
+  {% if page_obj.has_next %}
+    <a class="btn btn-small" href="?{{ page_query }}&page={{ page_obj.next_page_number }}">Next</a>
+  {% endif %}
+</nav>
+{% endif %}

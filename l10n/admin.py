@@ -8,6 +8,11 @@ from django.forms import Textarea
 from django.contrib.auth.models import Group
 
 from .models import Locale, LocaleAssignment, StringUnit, Translation, TranslatorApplication
+from .permissions import (
+    assigned_locale_ids as _assigned_locale_ids,
+    is_reviewer as _is_reviewer,
+    is_superadmin as _is_superadmin,
+)
 
 
 def _truncate(value: str | None, length: int = 80) -> str:
@@ -139,20 +144,6 @@ class TranslatorApplicationAdmin(admin.ModelAdmin):
             )
 
 
-def _is_in_group(user, group_name: str) -> bool:
-    return user.groups.filter(name=group_name).exists()
-
-
-def _is_superadmin(user) -> bool:
-    return user.is_superuser or _is_in_group(user, "L10N_SUPERADMIN")
-
-
-def _is_reviewer(user) -> bool:
-    return _is_in_group(user, "L10N_REVIEWER")
-
-
-def _assigned_locale_ids(user) -> list[int]:
-    return list(LocaleAssignment.objects.filter(user=user).values_list("locale_id", flat=True))
 
 
 class HasQAWarningsFilter(admin.SimpleListFilter):

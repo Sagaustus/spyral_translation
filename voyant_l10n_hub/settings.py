@@ -114,7 +114,10 @@ LOGGING = {
 # workable unless you opt in.
 _secure_cookies_default = bool(os.environ.get("DYNO"))
 CSRF_COOKIE_SECURE = _env_bool("DJANGO_CSRF_COOKIE_SECURE", _secure_cookies_default)
+CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = _env_bool("DJANGO_SESSION_COOKIE_SECURE", _secure_cookies_default)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
 
 
 # Application definition
@@ -138,6 +141,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "l10n.middleware.RateLimitMiddleware",
 ]
 
 ROOT_URLCONF = "voyant_l10n_hub.urls"
@@ -145,7 +149,7 @@ ROOT_URLCONF = "voyant_l10n_hub.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
