@@ -20,6 +20,10 @@
       <span class="stat-card__number">{{ locale_stats|length }}</span>
       <span class="stat-card__label">Active locales</span>
     </div>
+    <div class="stat-card" style="border-color: var(--clr-info, #3b82f6);">
+      <span class="stat-card__number" style="color: var(--clr-info, #3b82f6);">{{ total_ai_translated }}</span>
+      <span class="stat-card__label">AI translated</span>
+    </div>
     <div class="stat-card stat-card--success">
       <span class="stat-card__number">{{ total_approved }}</span>
       <span class="stat-card__label">Approved</span>
@@ -39,6 +43,7 @@
       <thead>
         <tr style="text-align: left; border-bottom: 2px solid var(--clr-border);">
           <th style="padding: 10px 12px;">Language</th>
+          <th style="padding: 10px 12px; text-align: center;">AI Translated</th>
           <th style="padding: 10px 12px; text-align: center;">Approved</th>
           <th style="padding: 10px 12px; text-align: center;">Awaiting Review</th>
           <th style="padding: 10px 12px; text-align: center;">In Review</th>
@@ -55,6 +60,15 @@
           <td style="padding: 10px 12px;">
             <div style="font-weight: 600;">{{ s.locale.name }}</div>
             <span class="locale-code">{{ s.locale.code }}</span>
+          </td>
+
+          {# AI Translated #}
+          <td style="padding: 10px 12px; text-align: center;">
+            {% if s.ai_translated %}
+              <span style="color: var(--clr-info, #3b82f6); font-weight: 600;">{{ s.ai_translated }}</span>
+            {% else %}
+              <span class="muted">0</span>
+            {% endif %}
           </td>
 
           {# Approved #}
@@ -139,26 +153,32 @@
   {# ── Legend ─────────────────────────────────────────────────────────── #}
   <div class="section-label"><h3>What the columns mean</h3></div>
 
-  <div class="grid cols-4">
+  <div class="grid cols-5">
     <div class="card" data-reveal>
+      <h4 style="color: var(--clr-info, #3b82f6);">AI Translated</h4>
+      <p class="muted mb-0 text-sm">
+        Total strings where AI has produced a draft translation, regardless of review status.
+      </p>
+    </div>
+    <div class="card" data-reveal data-reveal-delay="1">
       <h4 style="color: var(--clr-success);">Approved</h4>
       <p class="muted mb-0 text-sm">
         Human-validated strings, export-ready. Drives the % progress bar.
       </p>
     </div>
-    <div class="card" data-reveal data-reveal-delay="2">
+    <div class="card" data-reveal data-reveal-delay="3">
       <h4 style="color: var(--clr-warning);">Awaiting Review</h4>
       <p class="muted mb-0 text-sm">
         AI draft exists but no human has reviewed it yet. Click <em>Review</em> to start.
       </p>
     </div>
-    <div class="card" data-reveal data-reveal-delay="3">
+    <div class="card" data-reveal data-reveal-delay="4">
       <h4>In Review</h4>
       <p class="muted mb-0 text-sm">
         A reviewer has submitted text and it is waiting for final approver sign-off.
       </p>
     </div>
-    <div class="card" data-reveal data-reveal-delay="4">
+    <div class="card" data-reveal data-reveal-delay="5">
       <h4 style="color: var(--clr-danger);">QA Flags</h4>
       <p class="muted mb-0 text-sm">
         Automated checks flagged issues: low similarity, missing placeholders, length ratio.

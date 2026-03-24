@@ -75,6 +75,10 @@ def progress(request: HttpRequest) -> HttpResponse:
                 "id", filter=Q(status=Translation.TranslationStatus.MACHINE_DRAFT)
             ),
             qa_warnings=Count("id", filter=~Q(qa_flags=[])),
+            ai_translated=Count(
+                "id",
+                filter=Q(machine_draft__isnull=False) & ~Q(machine_draft=""),
+            ),
         )
     )
     stats_by_locale = {row["locale_id"]: row for row in stats_qs}
@@ -82,17 +86,20 @@ def progress(request: HttpRequest) -> HttpResponse:
     locale_stats = []
     total_approved = 0
     total_needs_review = 0
+    total_ai_translated = 0
     for locale in locales:
         row = stats_by_locale.get(locale.id, {})
         approved = row.get("approved", 0)
         in_review = row.get("in_review", 0)
         machine_draft = row.get("machine_draft", 0)
         qa_warnings = row.get("qa_warnings", 0)
+        ai_translated = row.get("ai_translated", 0)
         pct = round((approved / total_strings * 100) if total_strings else 0, 1)
         draft_pct = round(((approved + machine_draft + in_review) / total_strings * 100) if total_strings else 0, 1)
 
         total_approved += approved
         total_needs_review += machine_draft
+        total_ai_translated += ai_translated
 
         locale_stats.append(
             {
@@ -100,6 +107,7 @@ def progress(request: HttpRequest) -> HttpResponse:
                 "approved": approved,
                 "in_review": in_review,
                 "machine_draft": machine_draft,
+                "ai_translated": ai_translated,
                 "qa_warnings": qa_warnings,
                 "total": total_strings,
                 "pct": pct,
@@ -116,6 +124,7 @@ def progress(request: HttpRequest) -> HttpResponse:
             "total_strings": total_strings,
             "total_approved": total_approved,
             "total_needs_review": total_needs_review,
+            "total_ai_translated": total_ai_translated,
         },
     )
 
